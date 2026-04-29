@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BlackCat - Éditeur de Carte v6.8</title>
+<title>BlackCat - Éditeur de Carte v6.8.1</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1048,7 +1048,16 @@ function cleanLegacyHtmlString(s) {
   // pour s'assurer qu'elle est bien parsable et propre
   if (/<(b|i|u|strong|em|br|span|font)\b[^>]*>/i.test(v)) {
     try {
-      v = sanitizeHTML(v);
+      const sanitized = sanitizeHTML(v);
+      // [v6_8_1] Si la sanitization a perdu tout le contenu (ex: tags pas
+      // dans la whitelist), on extrait au moins le texte brut
+      if (!sanitized || sanitized.trim() === "") {
+        const tmp = document.createElement("div");
+        tmp.innerHTML = v;
+        v = tmp.textContent || tmp.innerText || "";
+      } else {
+        v = sanitized;
+      }
     } catch(e) {
       // Si le sanitize plante, on fallback sur du texte pur
       const tmp = document.createElement("div");
@@ -1105,13 +1114,39 @@ function migrateData(d) {
     d.sectionOrder.boissons_v3 = ["rhums_arranges", "shots", "mixer", "spritz"];
     d.schemaVersion = 6.7;
   }
-  // Migration v6_8 : nettoyage des strings HTML corrompues (une seule fois)
-  if (!d.schemaVersion || d.schemaVersion < 6.8) {
-    if (d.plats) d.plats = deepCleanLegacyHtml(d.plats);
-    if (d.boissons) d.boissons = deepCleanLegacyHtml(d.boissons);
-    if (d.sectionTitles) d.sectionTitles = deepCleanLegacyHtml(d.sectionTitles);
-    d.schemaVersion = 6.8;
+  // Migration v6_8 : nettoyage des strings HTML corrompues
+  // [v6_8_1] On force la migration à chaque chargement (pas de gardien schemaVersion)
+  // pour réparer les données qui auraient été stockées par v6.8 sans nettoyage effectif
+  if (d.plats) d.plats = deepCleanLegacyHtml(d.plats);
+  if (d.boissons) d.boissons = deepCleanLegacyHtml(d.boissons);
+  if (d.sectionTitles) d.sectionTitles = deepCleanLegacyHtml(d.sectionTitles);
+  // [v6_8_1] Suppression des items vides en tête de liste (nom et desc tous vides)
+  // qui apparaissent dans les données suite à une régression antérieure
+  const cleanEmptyHeadItems = (arr) => {
+    if (!Array.isArray(arr)) return arr;
+    let i = 0;
+    while (i < arr.length) {
+      const it = arr[i];
+      if (it && typeof it === "object" &&
+          (!it.nom || it.nom === "") &&
+          (!it.desc || it.desc === "") &&
+          (!it.prefix || it.prefix === "") &&
+          (!it.prix || it.prix === "")) {
+        arr.splice(i, 1);
+      } else {
+        i++;
+      }
+    }
+    return arr;
+  };
+  if (d.plats) {
+    if (d.plats.cocktails && d.plats.cocktails.items) cleanEmptyHeadItems(d.plats.cocktails.items);
+    if (d.plats.virgins && d.plats.virgins.items) cleanEmptyHeadItems(d.plats.virgins.items);
+    if (d.plats.tapas) cleanEmptyHeadItems(d.plats.tapas);
+    if (d.plats.plats_principaux) cleanEmptyHeadItems(d.plats.plats_principaux);
+    if (d.plats.desserts) cleanEmptyHeadItems(d.plats.desserts);
   }
+  d.schemaVersion = 6.81;
   return d;
 }
 
@@ -1254,9 +1289,17 @@ function looksLikeHtml(s) {
 }
 
 // Normalise une valeur (string brute ou HTML) en HTML pour innerHTML
+// [v6_8_1] On passe TOUJOURS par sanitizeHTML, même pour le texte brut, pour éviter
+// les cas où looksLikeHtml retournerait false par erreur. sanitizeHTML gère naturellement
+// le texte pur (les TextNodes sont conservés tels quels) et nettoie les tags non autorisés.
 function valueToHtml(value) {
   if (value == null || value === "") return "";
-  if (looksLikeHtml(value)) return sanitizeHTML(value);
+  if (typeof value !== "string") value = String(value);
+  // Si la string contient des < ou des entités, on tente sanitizeHTML
+  if (looksLikeHtml(value)) {
+    return sanitizeHTML(value);
+  }
+  // Sinon : texte brut, on échappe pour éviter toute injection
   return escapeHtml(value);
 }
 
@@ -3029,6 +3072,57 @@ function App() {
     });
   };
 
+  // [v6_8_1] Réparation manuelle : extrait le texte pur de toutes les strings HTML
+  // Utile quand le HTML s'affiche en brut malgré la migration auto
+  const handleRepairHtml = () => {
+    setModal({
+      title: "Réparer le HTML cassé ?",
+      text: "Cette action va extraire le texte brut de toutes les descriptions qui contiennent du HTML, en supprimant le formatage (gras, italique, tailles personnalisées). Utilise-la si tu vois du code <span> affiché en clair sur ta carte. Recommandé : fais d'abord un Export JSON pour sauvegarder.",
+      onConfirm: () => {
+        const stripHtmlToText = (s) => {
+          if (typeof s !== "string" || !s) return s;
+          if (!/<\w/.test(s) && !/&(amp;)?lt;/.test(s)) return s;
+          // Désentitiser
+          let v = s;
+          if (/&(amp;)?lt;/i.test(v)) {
+            const tmp = document.createElement("textarea");
+            tmp.innerHTML = v;
+            v = tmp.value;
+          }
+          // Extraire le texte
+          const tmp2 = document.createElement("div");
+          tmp2.innerHTML = v;
+          return (tmp2.textContent || tmp2.innerText || "").trim();
+        };
+        const deepStrip = (obj) => {
+          if (obj == null) return obj;
+          if (typeof obj === "string") return stripHtmlToText(obj);
+          if (Array.isArray(obj)) return obj.map(deepStrip);
+          if (typeof obj === "object") {
+            const out = {};
+            Object.keys(obj).forEach(k => {
+              if (k === "derniere_maj" || k === "schemaVersion") {
+                out[k] = obj[k];
+              } else {
+                out[k] = deepStrip(obj[k]);
+              }
+            });
+            return out;
+          }
+          return obj;
+        };
+        const next = deepClone(data);
+        if (next.plats) next.plats = deepStrip(next.plats);
+        if (next.boissons) next.boissons = deepStrip(next.boissons);
+        if (next.sectionTitles) next.sectionTitles = deepStrip(next.sectionTitles);
+        handleChange(next);
+        setModal(null);
+        setToast("HTML réparé — texte extrait");
+        setTimeout(() => setToast(""), 2500);
+      }
+    });
+  };
+
   const handleFirebaseToggle = (e) => {
     const enabled = e.target.checked;
     setFbEnabled(enabled);
@@ -3275,7 +3369,7 @@ function App() {
     <>
       <EditableToolbarHost previewMode={previewMode}/>
       <div className="toolbar">
-        <h1>🐾 THE BLACK CAT — ÉDITEUR DE CARTE v6.8</h1>
+        <h1>🐾 THE BLACK CAT — ÉDITEUR DE CARTE v6.8.1</h1>
         <button onClick={handlePrint}>🖨 Imprimer / PDF</button>
         <button onClick={handleExportPNG} disabled={exportingPNG} title="Export 3 images PNG haute résolution, une par volet (pour import Canva)">
           {exportingPNG ? "⏳ Export..." : "🖼 Export PNG"}
@@ -3300,6 +3394,7 @@ function App() {
         <button onClick={() => fileInputRef.current.click()}>⬆ Import JSON</button>
         <input type="file" ref={fileInputRef} accept=".json" style={{display:"none"}} onChange={handleImport}/>
         <button className="danger" onClick={handleReset}>↺ Réinitialiser</button>
+        <button onClick={handleRepairHtml} title="Extraire le texte brut des descriptions qui affichent du code HTML">🔧 Réparer HTML</button>
         <label>
           <input type="checkbox" checked={fbEnabled} onChange={handleFirebaseToggle}/>
           Sync Firebase
