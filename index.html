@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Black Cat — Éditeur de Carte</title>
+<title>BlackCat - Éditeur de Carte v6.8</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -235,14 +235,14 @@ body { padding: 20px 0 80px; }
   font-size: 9px; line-height: 1.2;
   padding: 1px 0;
 }
-.item-compact .name { flex: 1; min-width: 0; }
+.item-compact .name { flex: 1; min-width: 0; color: #C0392B; font-weight: 700; }
 .item-compact .price { font-weight: 700; margin-left: 6px; white-space: nowrap; }
 .col-title {
   font-weight: 900; font-size: 14px;
   color: #C0392B; letter-spacing: 1.5px;
   text-transform: uppercase;
   text-align: center;
-  padding: 4px 0; margin-bottom: 5px;
+  padding: 2px 0; margin-bottom: 3px;
   border-top: 1.5px solid #C0392B;
   border-bottom: 1.5px solid #C0392B;
 }
@@ -250,11 +250,75 @@ body { padding: 20px 0 80px; }
 /* ============ TABLEAU VINS / BIÈRES PRESSION ============ */
 .vin-table, .biere-table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
 .vin-table td, .biere-table td { padding: 1px 2px; vertical-align: top; }
-.vin-table .price { text-align: right; font-weight: 700; }
+.vin-table .price { text-align: right; font-weight: 700; white-space: nowrap; width: 38px; }
+.biere-table td:first-child { width: auto; }
+.biere-table .price { text-align: right; font-weight: 700; white-space: nowrap; vertical-align: middle; }
+
+/* ============ v6_8 : POLICE NOIRE PAR DÉFAUT — SECTIONS BOISSONS ============ */
+/* Force le noir comme couleur de base pour les items des sections boissons.
+   Les span avec color: explicite (via execCommand foreColor) prennent le dessus.
+   On exclut .item-prefix qui garde son rouge thème (#C0392B). */
+[data-section-id="softs"] .item-name,
+[data-section-id="softs"] .item-desc,
+[data-section-id="softs"] td,
+[data-section-id="apero"] .item-name,
+[data-section-id="apero"] .item-desc,
+[data-section-id="apero"] td,
+[data-section-id="chaudes"] .item-name,
+[data-section-id="chaudes"] .item-desc,
+[data-section-id="chaudes"] td,
+[data-section-id="cocktails"] .item-name,
+[data-section-id="cocktails"] .item-desc,
+[data-section-id="virgins"] .item-name,
+[data-section-id="virgins"] .item-desc,
+[data-section-id="vins"] td,
+[data-section-id="vins_blanc"] td,
+[data-section-id="vins_rose"] td,
+[data-section-id="vins_rouge"] td,
+[data-section-id="bieres_pression"] td,
+[data-section-id="bieres_bouteilles"] td,
+[data-section-id="shots"] td,
+[data-section-id="mixer"] .item-name,
+[data-section-id="mixer"] td,
+[data-section-id="spritz"] .item-name,
+[data-section-id="spritz"] td,
+[data-section-id="rhums_arranges"] .item-name,
+[data-section-id="rhums_arranges"] td {
+  color: #000;
+}
+/* Sauf : .item-prefix garde son rouge (#C0392B) */
+/* Sauf : .biere-name garde son rouge */
+/* Sauf : .shots-name garde son rouge (déclaré explicitement plus bas) */
+/* On ne touche PAS aux titres (.col-title, .section-title) qui ont déjà leur couleur */
+/* Les span avec color: explicite (foreColor) prennent toujours le dessus naturellement */
+
+/* ============ TABLEAU SHOTS (alignement colonnes prix) ============ */
+.shots-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.shots-table td { padding: 1px 2px; vertical-align: baseline; }
+.shots-table .price { text-align: right; font-weight: 700; white-space: nowrap; width: 50px; }
+.shots-table .shots-name { color: #C0392B; font-weight: 700; text-transform: uppercase; }
 .biere-row { border-top: 1px solid #ccc; padding-top: 3px; margin-top: 3px; }
-.biere-name { font-weight: 700; font-size: 9.5px; }
+.biere-name { font-weight: 700; font-size: 9.5px; color: #C0392B; }
 .biere-desc { font-size: 7.5px; font-style: italic; opacity: .75; line-height: 1.15; margin: 1px 0 2px; }
 .biere-prices { font-size: 8.5px; font-weight: 600; color: #C0392B; }
+/* Grid bières pression — aligne les colonnes prix sous leurs intitulés */
+.biere-grid { width: 100%; font-size: 8.5px; }
+.biere-grid-header,
+.biere-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 30px 30px 36px;
+  gap: 0 2px;
+  align-items: center;
+}
+.biere-grid-header {
+  font-size: 8px; opacity: .7; font-weight: 600;
+  margin-bottom: 2px;
+}
+.biere-grid-header span:not(:first-child) { text-align: right; }
+.biere-grid-price {
+  text-align: right; font-weight: 700;
+  color: #C0392B; white-space: nowrap;
+}
 
 /* ============ FOOTER CARTE ============ */
 .footer-plats {
@@ -411,6 +475,46 @@ body.preview .volet.active-volet { box-shadow: none; }
 }
 .overlay-props button.danger:hover { background: #C0392B; }
 
+/* ============ v6.4 STACKING 2-LAYERS + MODE ÉDITION ============
+   Empilement normal (preview / impression) :
+     overlay-layer-back  : z-index 0   (DERRIÈRE le contenu)
+     contenu natif       : z-index ≥ 1 (sections, hachures, logos, etc.)
+     overlay-layer-front : z-index 100 (DEVANT le contenu)
+   Mode édition (body sans .preview) :
+     TOUS les overlays   : z-index 1000+ (cliquables / déplaçables)
+     contenu natif       : pointer-events normal (Editable cliquables partout
+                           où aucun overlay n'est superposé)
+
+   v6.4 : on a retiré la règle pointer-events:none sur le contenu natif. Le
+   conflit de clic est géré côté JS : startDrag fait e.stopPropagation() donc
+   un clic sur un overlay n'atteint jamais le contenu natif en dessous. Et
+   inversement, partout où il n'y a pas d'overlay au-dessus, l'Editable natif
+   reçoit ses clics normalement.
+
+   IMPORTANT : on cible uniquement les éléments en FLUX NORMAL (sections,
+   footers...) avec position:relative. Les logos/hachures/taglines en
+   position:absolute conservent leur position d'origine et leur z-index natif.
+*/
+.volet > .section,
+.volet > .section-title-dark,
+.volet > .section-subtitle,
+.volet > .footer-boissons,
+.volet > .footer-mentions-v2,
+.volet > .price-banner,
+.volet > .font-picker-inline,
+.volet > div:not([class]),
+.volet > table {
+  position: relative;
+  z-index: 1;
+}
+.overlay-layer-back  { z-index: 0 !important; }
+.overlay-layer-front { z-index: 100 !important; }
+
+/* Mode édition : on remonte les overlays back au-dessus du contenu pour pouvoir
+   les sélectionner et déplacer. Le front reste au-dessus de tout. */
+body:not(.preview) .overlay-layer-back  { z-index: 1000 !important; }
+body:not(.preview) .overlay-layer-front { z-index: 1001 !important; }
+
 body.preview .overlay-item { pointer-events: none; }
 body.preview .overlay-item.selected { outline: none; }
 body.preview .overlay-handle { display: none; }
@@ -454,6 +558,172 @@ body.preview [contenteditable="true"] { pointer-events: none; }
 body.preview [contenteditable="true"]:hover,
 body.preview [contenteditable="true"]:focus {
   background: transparent; box-shadow: none;
+}
+
+/* ============ v6.5 EDIT-CHROME : Toolbar / Lignes / Sections ============ */
+/* Toolbar de formatage flottante */
+.fmt-toolbar {
+  position: fixed; z-index: 5000;
+  background: #1a1a2e; color: #fff;
+  border-radius: 6px; padding: 4px;
+  display: flex; gap: 2px; align-items: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.35);
+  font-family: Arial, sans-serif; font-size: 13px;
+  user-select: none;
+}
+.fmt-toolbar button {
+  background: transparent; color: #fff; border: 1px solid transparent;
+  padding: 5px 9px; min-width: 28px; height: 28px;
+  border-radius: 4px; cursor: pointer; font-size: 13px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.fmt-toolbar button:hover { background: rgba(255,255,255,.15); }
+.fmt-toolbar button.active { background: #D4A843; color: #1a1a2e; }
+.fmt-toolbar .sep { width: 1px; height: 20px; background: rgba(255,255,255,.3); margin: 0 3px; }
+.fmt-toolbar .b-bold { font-weight: 900; }
+.fmt-toolbar .b-italic { font-style: italic; }
+.fmt-toolbar .b-under { text-decoration: underline; }
+.fmt-toolbar .b-size { font-size: 14px; font-weight: 700; }
+
+/* Mini-bandeau de section (au survol) */
+.section-chrome {
+  position: absolute; top: -22px; left: 0;
+  display: none;
+  background: rgba(26,26,46,.95); color: #fff;
+  border-radius: 4px; padding: 2px 4px;
+  font-size: 11px; font-family: Arial, sans-serif;
+  align-items: center; gap: 4px;
+  z-index: 200; user-select: none;
+  white-space: nowrap;
+}
+.has-chrome { position: relative; }
+.has-chrome:hover > .section-chrome,
+.section-chrome:hover,
+.section-chrome.dragging,
+.section-chrome.chrome-pinned { display: inline-flex; }
+.section-chrome button {
+  background: transparent; color: #fff; border: 1px solid transparent;
+  padding: 2px 6px; min-width: 22px; height: 22px;
+  border-radius: 3px; cursor: pointer; font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.section-chrome button:hover { background: rgba(255,255,255,.2); }
+.section-chrome .drag-handle {
+  cursor: grab; padding: 2px 4px; font-size: 14px; line-height: 1;
+}
+.section-chrome .drag-handle:active { cursor: grabbing; }
+.section-chrome select {
+  background: #fff; color: #1a1a2e; border: none;
+  padding: 1px 3px; border-radius: 3px; font-size: 10px;
+  max-width: 110px; cursor: pointer;
+}
+.section-chrome .sep { width: 1px; height: 14px; background: rgba(255,255,255,.4); margin: 0 2px; }
+
+/* Drop indicators pour réordonner sections */
+.section-drop-target {
+  outline: 2px dashed #D4A843;
+  outline-offset: 2px;
+}
+
+/* Boutons de ligne (➕ / 🗑 / ⊕ / ⋮⋮) */
+.row-edit-wrap { position: relative; }
+.row-edit-wrap .row-handle {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  display: none;
+  width: 12px; height: 14px;
+  font-size: 10px; line-height: 1;
+  background: rgba(212, 168, 67, .9); color: #1a1a2e;
+  border-radius: 2px;
+  cursor: grab; user-select: none;
+  align-items: center; justify-content: center;
+  z-index: 5;
+}
+.row-edit-wrap:hover > .row-handle { display: inline-flex; }
+.row-edit-wrap .row-handle:active { cursor: grabbing; }
+
+.row-edit-wrap .row-delete {
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  display: none;
+  width: 14px; height: 14px;
+  background: #C0392B; color: #fff;
+  border: none; border-radius: 50%;
+  font-size: 10px; line-height: 1; cursor: pointer;
+  align-items: center; justify-content: center;
+  padding: 0; z-index: 5;
+}
+.row-edit-wrap:hover > .row-delete { display: inline-flex; }
+.row-edit-wrap .row-delete:hover { background: #8b2020; }
+
+.row-insert {
+  display: none;
+  width: 100%; height: 8px;
+  position: relative; cursor: pointer;
+  margin: -2px 0;
+}
+.section:hover .row-insert,
+.row-edit-wrap:hover + .row-insert,
+.row-insert:hover { display: block; }
+.row-insert::before {
+  content: ""; position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 2px; background: transparent;
+  transform: translateY(-50%);
+}
+.row-insert:hover::before { background: #D4A843; }
+.row-insert::after {
+  content: "⊕"; position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%,-50%);
+  background: #D4A843; color: #1a1a2e;
+  width: 16px; height: 16px;
+  border-radius: 50%; font-size: 11px; font-weight: 700;
+  display: none; align-items: center; justify-content: center;
+}
+.row-insert:hover::after { display: inline-flex; }
+
+.row-add-btn {
+  display: none;
+  margin: 4px auto 0;
+  background: #D4A843; color: #1a1a2e;
+  border: none; padding: 3px 10px;
+  border-radius: 4px; font-size: 11px; font-weight: 700;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+}
+.section:hover > .row-add-btn { display: block; }
+.row-add-btn:hover { background: #b8902e; }
+
+.row-edit-wrap.row-dragging { opacity: 0.4; }
+.row-edit-wrap.row-drop-before { border-top: 2px solid #D4A843; }
+.row-edit-wrap.row-drop-after { border-bottom: 2px solid #D4A843; }
+
+/* Auto-fit : pendant la dichotomie de mesure, on injecte --bc-fit-size sur la section
+   et cette règle l'applique aux éléments enfants. Ne s'applique qu'à la section en cours de fit. */
+.bc-fit-active .item,
+.bc-fit-active .item-name,
+.bc-fit-active .item-prefix,
+.bc-fit-active .item-desc,
+.bc-fit-active .item-price,
+.bc-fit-active td,
+.bc-fit-active li,
+.bc-fit-active .biere-row,
+.bc-fit-active .item-compact { font-size: var(--bc-fit-size) !important; }
+.bc-fit-active .item-desc { font-size: calc(var(--bc-fit-size) * 0.88) !important; }
+.bc-fit-active .item-price { font-size: calc(var(--bc-fit-size) * 1.10) !important; }
+
+/* En mode preview / print : tout chrome d'édition disparaît */
+body.preview .fmt-toolbar,
+body.preview .section-chrome,
+body.preview .row-handle,
+body.preview .row-delete,
+body.preview .row-insert,
+body.preview .row-add-btn { display: none !important; }
+@media print {
+  .fmt-toolbar,
+  .section-chrome,
+  .row-handle,
+  .row-delete,
+  .row-insert,
+  .row-add-btn { display: none !important; }
 }
 
 /* ============ MODALS ============ */
@@ -714,12 +984,134 @@ function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 const VOLET_KEYS = ["plats_v1", "plats_v2", "plats_v3", "boissons_v1", "boissons_v2", "boissons_v3"];
 
 // Migre une donnée pour s'assurer qu'elle a la structure overlays
+// v6.5 : ajoute les titres de section éditables, sectionConfig (fontFamily, adjustedFontSize),
+// et les ordres de sections par volet (rétrocompat totale : valeurs par défaut si absentes).
+const DEFAULT_SECTION_TITLES = {
+  // Page plats
+  cocktails:        { titre: "• COCKTAILS •" },
+  virgins:          { titre: "• LES VIRGINS •" },
+  tapas:            { titre: "TAPAS DU BLACK CAT" },
+  plats_principaux: { titre: "PLATS", soustitre: "Accompagnement frites & salade" },
+  desserts:         { titre: "DESSERTS" },
+  // Page boissons
+  chaudes:          { titre: "BOISSONS CHAUDES" },
+  softs:            { titre: "SOFTS" },
+  apero:            { titre: "APÉRITIFS" },
+  vins:             { titre: "VINS" },
+  vins_blanc:       { titre: "BLANCS" },
+  vins_rouge:       { titre: "ROUGES" },
+  vins_rose:        { titre: "ROSÉS" },
+  bieres_pression:  { titre: "BIÈRES PRESSION" },
+  bieres_bouteilles:{ titre: "BIÈRES BOUTEILLES" },
+  rhums_arranges:   { titre: "RHUMS ARRANGÉS" },
+  shots:            { titre: "SHOTS" },
+  mixer:            { titre: "MIXER" },
+  spritz:           { titre: "SPRITZ" },
+};
+const DEFAULT_SECTION_ORDERS = {
+  // Volets de la page plats
+  plats_v1: ["cocktails", "virgins"],
+  plats_v2: ["tapas", "plats_principaux", "desserts"],
+  plats_v3: [],
+  // Volets de la page boissons
+  // v1: chaudes/softs/apero/vins (gauche)
+  // v2: bières pression + bouteilles ensemble (centre)
+  // v3: rhums + shots + mixer + spritz (droite)
+  boissons_v1: ["chaudes", "softs", "apero", "vins"],
+  boissons_v2: ["bieres_pression", "bieres_bouteilles"],
+  boissons_v3: ["rhums_arranges", "shots", "mixer", "spritz"],
+};
+// ============ v6_8 : NETTOYAGE DES STRINGS HTML CORROMPUES ============
+// Cas observé : des strings ont été stockées avec entités HTML échappées
+// (ex : "&lt;span style=&quot;font-size: 9px&quot;&gt;...&lt;/span&gt;")
+// ou stockées en mélange texte/HTML cassé (ex : '<span style="font-size: 9px">...')
+// Cette fonction restaure le HTML propre attendu par sanitizeHTML.
+function cleanLegacyHtmlString(s) {
+  if (typeof s !== "string" || !s) return s;
+  let v = s;
+
+  // Cas 1 : entités HTML échappées (&lt;span... ou &amp;lt;span...)
+  // On désentité une fois si on détecte des entités de tags
+  if (/&(amp;)?lt;(b|i|u|strong|em|br|span|font)\b/i.test(v)) {
+    const tmp = document.createElement("textarea");
+    tmp.innerHTML = v;
+    v = tmp.value;
+    // Si le résultat contient encore des entités d'entités (double-escape),
+    // on désentité à nouveau (max 2 passes pour éviter une boucle)
+    if (/&(amp;)?lt;(b|i|u|strong|em|br|span|font)\b/i.test(v)) {
+      tmp.innerHTML = v;
+      v = tmp.value;
+    }
+  }
+
+  // Cas 2 : la string contient bien des tags HTML — on la passe par sanitizeHTML
+  // pour s'assurer qu'elle est bien parsable et propre
+  if (/<(b|i|u|strong|em|br|span|font)\b[^>]*>/i.test(v)) {
+    try {
+      v = sanitizeHTML(v);
+    } catch(e) {
+      // Si le sanitize plante, on fallback sur du texte pur
+      const tmp = document.createElement("div");
+      tmp.innerHTML = v;
+      v = tmp.textContent || tmp.innerText || "";
+    }
+  }
+
+  return v;
+}
+
+// Parcours récursif pour appliquer le nettoyage à toutes les strings
+function deepCleanLegacyHtml(obj) {
+  if (obj == null) return obj;
+  if (typeof obj === "string") return cleanLegacyHtmlString(obj);
+  if (Array.isArray(obj)) return obj.map(deepCleanLegacyHtml);
+  if (typeof obj === "object") {
+    const out = {};
+    Object.keys(obj).forEach(k => {
+      // On ne touche pas aux meta techniques
+      if (k === "derniere_maj" || k === "schemaVersion") {
+        out[k] = obj[k];
+      } else {
+        out[k] = deepCleanLegacyHtml(obj[k]);
+      }
+    });
+    return out;
+  }
+  return obj;
+}
+
 function migrateData(d) {
   if (!d.overlays) d.overlays = {};
   VOLET_KEYS.forEach(k => {
     if (!Array.isArray(d.overlays[k])) d.overlays[k] = [];
   });
   if (!d.fontFamily) d.fontFamily = "Arial, sans-serif";
+  // Titres de section
+  if (!d.sectionTitles) d.sectionTitles = {};
+  Object.keys(DEFAULT_SECTION_TITLES).forEach(k => {
+    if (!d.sectionTitles[k]) d.sectionTitles[k] = { ...DEFAULT_SECTION_TITLES[k] };
+  });
+  // Configs (fontFamily, adjustedFontSize, spacingTop) par section
+  if (!d.sectionConfig) d.sectionConfig = {};
+  // Ordres des sections par volet (mode "intra-volet uniquement")
+  if (!d.sectionOrder) d.sectionOrder = {};
+  Object.keys(DEFAULT_SECTION_ORDERS).forEach(vk => {
+    if (!Array.isArray(d.sectionOrder[vk])) d.sectionOrder[vk] = [...DEFAULT_SECTION_ORDERS[vk]];
+  });
+  // Migration v6_7 : vins regroupés sur boissons_v1, rhums/shots/mixer/spritz sur v3
+  if (!d.schemaVersion || d.schemaVersion < 6.7) {
+    d.sectionOrder.boissons_v1 = ["chaudes", "softs", "apero", "vins"];
+    d.sectionOrder.boissons_v2 = ["bieres_pression", "bieres_bouteilles"];
+    d.sectionOrder.boissons_v3 = ["rhums_arranges", "shots", "mixer", "spritz"];
+    d.schemaVersion = 6.7;
+  }
+  // Migration v6_8 : nettoyage des strings HTML corrompues (une seule fois)
+  if (!d.schemaVersion || d.schemaVersion < 6.8) {
+    if (d.plats) d.plats = deepCleanLegacyHtml(d.plats);
+    if (d.boissons) d.boissons = deepCleanLegacyHtml(d.boissons);
+    if (d.sectionTitles) d.sectionTitles = deepCleanLegacyHtml(d.sectionTitles);
+    d.schemaVersion = 6.8;
+  }
   return d;
 }
 
@@ -771,26 +1163,296 @@ function useCarteData() {
   return { data, save, undo, reset, history, saveStatus, setSaveStatus };
 }
 
+// ============ v6.5 SANITIZATION HTML ============
+// Whitelist : tags b, i, u, strong, em, br + span avec style limité
+// Tout le reste est strippé. Les attributs autres que style sont supprimés.
+const ALLOWED_TAGS = new Set(["B","I","U","STRONG","EM","BR","SPAN"]);
+const ALLOWED_STYLE_PROPS = new Set([
+  "font-size", "font-weight", "font-style", "text-decoration", "color"
+]);
+
+function sanitizeStyle(styleStr) {
+  if (!styleStr) return "";
+  const out = [];
+  styleStr.split(";").forEach(decl => {
+    const idx = decl.indexOf(":");
+    if (idx < 0) return;
+    const prop = decl.slice(0, idx).trim().toLowerCase();
+    const val = decl.slice(idx + 1).trim();
+    if (!ALLOWED_STYLE_PROPS.has(prop)) return;
+    // Filtre strict des valeurs (anti-injection)
+    // font-size : nombre + unité (px, em, %, pt)
+    // autres : keywords sans caractères spéciaux
+    if (prop === "font-size") {
+      if (!/^\d+(\.\d+)?(px|em|rem|%|pt)$/i.test(val)) return;
+    } else if (prop === "color") {
+      // Accepte hex (#xxx ou #xxxxxx), rgb(), rgba(), et noms de couleurs simples
+      if (!/^(#[0-9a-fA-F]{3,8}|rgb\([^)]*\)|rgba\([^)]*\)|[a-zA-Z]+)$/.test(val)) return;
+    } else {
+      if (!/^[a-zA-Z0-9\- ]+$/.test(val)) return;
+    }
+    out.push(`${prop}: ${val}`);
+  });
+  return out.join("; ");
+}
+
+function sanitizeNode(node) {
+  // Si textNode, on garde
+  if (node.nodeType === 3) return node.cloneNode();
+  if (node.nodeType !== 1) return null;
+  const tag = node.tagName.toUpperCase();
+  if (!ALLOWED_TAGS.has(tag)) {
+    // Tag non autorisé : on garde uniquement les enfants (unwrap)
+    const frag = document.createDocumentFragment();
+    Array.from(node.childNodes).forEach(child => {
+      const cleaned = sanitizeNode(child);
+      if (cleaned) frag.appendChild(cleaned);
+    });
+    return frag;
+  }
+  const clean = document.createElement(tag.toLowerCase());
+  // Conserver style uniquement (et seulement sur span)
+  if (tag === "SPAN") {
+    const style = sanitizeStyle(node.getAttribute("style") || "");
+    if (style) clean.setAttribute("style", style);
+    else if (node.childNodes.length === 0) return null; // span vide sans style = inutile
+  }
+  Array.from(node.childNodes).forEach(child => {
+    const cleaned = sanitizeNode(child);
+    if (cleaned) clean.appendChild(cleaned);
+  });
+  return clean;
+}
+
+function sanitizeHTML(html) {
+  if (!html) return "";
+  const tmpl = document.createElement("template");
+  tmpl.innerHTML = html;
+  const out = document.createElement("div");
+  Array.from(tmpl.content.childNodes).forEach(node => {
+    const cleaned = sanitizeNode(node);
+    if (cleaned) out.appendChild(cleaned);
+  });
+  return out.innerHTML;
+}
+
+// Conversion texte brut → HTML safe (pour la rétrocompat v6_4)
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Détecte si une string contient du HTML (tags formattants)
+// [v6_7 fix] [^>]* permet de matcher <SPAN STYLE="..."> et <font color="..."> générés par execCommand
+function looksLikeHtml(s) {
+  if (typeof s !== "string") return false;
+  return /<(b|i|u|strong|em|br|span|font)[^>]*>/i.test(s);
+}
+
+// Normalise une valeur (string brute ou HTML) en HTML pour innerHTML
+function valueToHtml(value) {
+  if (value == null || value === "") return "";
+  if (looksLikeHtml(value)) return sanitizeHTML(value);
+  return escapeHtml(value);
+}
+
+// Extrait le texte affiché (pour les classes "price" qui n'acceptent pas le formatage)
+function htmlToText(html) {
+  if (!html) return "";
+  if (!looksLikeHtml(html)) return html;
+  const tmp = document.createElement("div");
+  tmp.innerHTML = sanitizeHTML(html);
+  return tmp.textContent || tmp.innerText || "";
+}
+
+// ============ TOOLBAR DE FORMATAGE FLOTTANTE ============
+function FormatToolbar({ targetRef, onCommand }) {
+  const [pos, setPos] = React.useState(null);
+  const [activeStates, setActiveStates] = React.useState({ bold: false, italic: false, underline: false });
+  const tbRef = React.useRef(null);
+
+  const [textColor, setTextColor] = React.useState("#000000");
+  const savedRangeRef = React.useRef(null);
+  const colorInputRef = React.useRef(null);
+
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+    }
+  };
+
+  const restoreSelection = () => {
+    if (!savedRangeRef.current) return;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRangeRef.current);
+  };
+
+  React.useEffect(() => {
+    if (!targetRef || !targetRef.current) { setPos(null); return; }
+    const rect = targetRef.current.getBoundingClientRect();
+    // Position au-dessus, flip si déborde
+    const tbHeight = 38;
+    let top = rect.top - tbHeight - 4;
+    let flipped = false;
+    if (top < 8) { top = rect.bottom + 4; flipped = true; }
+    let left = Math.max(8, Math.min(rect.left, window.innerWidth - 320));
+    setPos({ top, left });
+    // Mise à jour des états actifs (gras / italique / souligné)
+    try {
+      setActiveStates({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+      });
+    } catch(e) {}
+  }, [targetRef]);
+
+  // Empêche le blur de l'editable au mousedown sur la toolbar
+  const onTbMouseDown = (e) => { e.preventDefault(); };
+
+  if (!pos) return null;
+
+  const cmd = (name, value) => {
+    onCommand(name, value);
+    try {
+      setActiveStates({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+      });
+    } catch(e) {}
+  };
+
+  return (
+    <div
+      ref={tbRef}
+      className="fmt-toolbar"
+      style={{ top: pos.top + "px", left: pos.left + "px" }}
+      onMouseDown={onTbMouseDown}
+    >
+      <button className={"b-bold" + (activeStates.bold ? " active" : "")} title="Gras (Ctrl+B)" onClick={() => cmd("bold")}>B</button>
+      <button className={"b-italic" + (activeStates.italic ? " active" : "")} title="Italique (Ctrl+I)" onClick={() => cmd("italic")}>I</button>
+      <button className={"b-under" + (activeStates.underline ? " active" : "")} title="Souligné (Ctrl+U)" onClick={() => cmd("underline")}>U</button>
+      <span className="sep"></span>
+      <button className="b-size" title="Diminuer taille" onClick={() => cmd("fontSizeDelta", -1)}>A−</button>
+      <button className="b-size" title="Augmenter taille" onClick={() => cmd("fontSizeDelta", +1)}>A+</button>
+      <span className="sep"></span>
+      <span
+        title="Couleur du texte"
+        style={{display:"inline-flex",alignItems:"center",gap:"3px",cursor:"pointer",position:"relative"}}
+      >
+        <span style={{fontSize:"11px",color:"#ccc",pointerEvents:"none"}}>A</span>
+        <span
+          style={{
+            display:"inline-block", width:"18px", height:"18px",
+            borderRadius:"3px", border:"1px solid rgba(255,255,255,.4)",
+            background: textColor, cursor:"pointer", flexShrink:0
+          }}
+          onMouseDown={e => {
+            e.preventDefault(); e.stopPropagation();
+            saveSelection();
+            // [v6_8] On reset l'input à une valeur sentinelle différente avant le clic
+            // pour que onInput se déclenche même si l'utilisateur re-choisit la même couleur
+            // (notamment pour repasser au noir #000000 qui est la valeur initiale)
+            if (colorInputRef.current) {
+              // Sentinelle : on passe par une valeur improbable avant l'ouverture
+              colorInputRef.current.value = textColor === "#000000" ? "#010101" : textColor;
+              colorInputRef.current.click();
+            }
+          }}
+        />
+        <input
+          ref={colorInputRef}
+          type="color"
+          defaultValue="#000000"
+          onMouseDown={e => e.stopPropagation()}
+          onInput={e => {
+            const newColor = e.target.value;
+            setTextColor(newColor);
+            restoreSelection();
+            cmd("foreColor", newColor);
+          }}
+          onChange={e => {
+            // Fallback si onInput pas déclenché (vieux Safari)
+            const newColor = e.target.value;
+            setTextColor(newColor);
+            restoreSelection();
+            cmd("foreColor", newColor);
+          }}
+          style={{position:"absolute",width:"1px",height:"1px",opacity:0,pointerEvents:"none"}}
+          title="Couleur du texte"
+        />
+      </span>
+    </div>
+  );
+}
+
 // ============ EDITABLE CELL ============
+// v6.5 : stockage HTML formaté avec sanitization stricte au onBlur.
+// - Compare en innerHTML pour ne pas écraser pendant l'édition active
+// - Si className === "price", on force texte brut (pas de formatage sur les prix)
 function Editable({ value, onChange, className, style, multiline }) {
   const ref = React.useRef(null);
+  const [focused, setFocused] = React.useState(false);
+  const isPrice = className && className.indexOf("price") !== -1;
 
-  // Évite le re-render qui perd le curseur : on ne met à jour le texte que si différent
+  // Réécriture conditionnelle : seulement si la valeur externe diffère ET qu'on n'est pas en train d'éditer
   React.useEffect(() => {
-    if (ref.current && ref.current.innerText !== value) {
-      ref.current.innerText = value || "";
+    if (!ref.current) return;
+    if (document.activeElement === ref.current) return; // on n'écrase JAMAIS l'édition en cours
+    const targetHtml = isPrice
+      ? escapeHtml(htmlToText(value))
+      : valueToHtml(value);
+    if (ref.current.innerHTML !== targetHtml) {
+      ref.current.innerHTML = targetHtml;
     }
-  }, [value]);
+  }, [value, isPrice]);
 
   const handleBlur = () => {
-    const newVal = ref.current.innerText;
-    if (newVal !== value) onChange(newVal);
+    setFocused(false);
+    if (!ref.current) return;
+    let newVal;
+    if (isPrice) {
+      newVal = ref.current.innerText.replace(/\s+/g, " ").trim();
+    } else {
+      newVal = sanitizeHTML(ref.current.innerHTML);
+      // Si après sanitize on n'a que du texte sans tag, on stocke en clair (cohérence v6_4)
+      if (!looksLikeHtml(newVal)) {
+        const tmp = document.createElement("div");
+        tmp.innerHTML = newVal;
+        newVal = tmp.textContent || "";
+      }
+    }
+    // On compare avec la value telle qu'elle est stockée
+    if (newVal !== (value || "")) onChange(newVal);
   };
 
   const handleKey = (e) => {
     if (!multiline && e.key === "Enter") {
       e.preventDefault();
       ref.current.blur();
+      return;
+    }
+    if (isPrice) return; // pas de raccourcis sur les prix
+    if (e.ctrlKey || e.metaKey) {
+      const k = e.key.toLowerCase();
+      if (k === "b") { e.preventDefault(); document.execCommand("bold"); }
+      else if (k === "i") { e.preventDefault(); document.execCommand("italic"); }
+      else if (k === "u") { e.preventDefault(); document.execCommand("underline"); }
+    }
+  };
+
+  // Toolbar : exposée via état parent. On utilise un contexte léger (window event)
+  const handleFocus = () => {
+    setFocused(true);
+    if (!isPrice) {
+      window.dispatchEvent(new CustomEvent("bc-editable-focus", { detail: { ref } }));
     }
   };
 
@@ -803,9 +1465,73 @@ function Editable({ value, onChange, className, style, multiline }) {
       suppressContentEditableWarning
       spellCheck={false}
       onBlur={handleBlur}
+      onFocus={handleFocus}
       onKeyDown={handleKey}
+      onMouseUp={() => { if (focused && !isPrice) window.dispatchEvent(new CustomEvent("bc-editable-focus", { detail: { ref } })); }}
     />
   );
+}
+
+// ============ HOST DE LA TOOLBAR (monté une fois au niveau App) ============
+function EditableToolbarHost({ previewMode }) {
+  const [activeRef, setActiveRef] = React.useState(null);
+
+  React.useEffect(() => {
+    const onFocus = (e) => setActiveRef(e.detail.ref);
+    const onBlur = () => {
+      // Retarde pour laisser le clic sur la toolbar passer
+      setTimeout(() => {
+        if (!document.activeElement || !document.activeElement.isContentEditable) {
+          setActiveRef(null);
+        }
+      }, 150);
+    };
+    window.addEventListener("bc-editable-focus", onFocus);
+    document.addEventListener("focusout", onBlur, true);
+    return () => {
+      window.removeEventListener("bc-editable-focus", onFocus);
+      document.removeEventListener("focusout", onBlur, true);
+    };
+  }, []);
+
+  const handleCmd = (name, value) => {
+    if (name === "foreColor") {
+      try {
+        document.execCommand("foreColor", false, value);
+      } catch(e) {}
+      return;
+    }
+    if (name === "fontSizeDelta") {
+      // Récupère la sélection, applique font-size par dichotomie sur span dédié
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return;
+      // Détermine la taille actuelle (prend la première range)
+      const startEl = range.startContainer.nodeType === 3 ? range.startContainer.parentElement : range.startContainer;
+      const currentSize = parseFloat(window.getComputedStyle(startEl).fontSize) || 12;
+      const newSize = Math.max(5, Math.min(80, currentSize + value));
+      // execCommand("fontSize") ne donne que des valeurs 1-7 pas pratiques
+      // Solution : entoure la sélection d'un span avec font-size en px
+      const span = document.createElement("span");
+      span.style.fontSize = newSize.toFixed(1) + "px";
+      try {
+        const contents = range.extractContents();
+        span.appendChild(contents);
+        range.insertNode(span);
+        // Replace la sélection sur le span créé
+        sel.removeAllRanges();
+        const r = document.createRange();
+        r.selectNodeContents(span);
+        sel.addRange(r);
+      } catch(e) { console.warn("fontSize change failed", e); }
+    } else {
+      try { document.execCommand(name); } catch(e) {}
+    }
+  };
+
+  if (previewMode || !activeRef) return null;
+  return <FormatToolbar targetRef={activeRef} onCommand={handleCmd}/>;
 }
 
 // ============ ITEM EDITABLE (plat/cocktail) ============
@@ -838,13 +1564,371 @@ function ItemRow({ item, onChange, showPrice = true }) {
           />
         )}
       </div>
-      {showPrice && item.prix !== undefined && (
+      {showPrice && item.prix !== null && item.prix !== undefined && (
         <Editable
           className="item-price"
           value={item.prix}
           onChange={v => onChange({...item, prix: v})}
         />
       )}
+    </div>
+  );
+}
+
+// ============ v6.5 : WRAPPERS DE LIGNES ÉDITABLES ============
+// EditableRow : enveloppe une ligne avec poignée drag, bouton delete et zone d'insertion
+// Utilisé pour tous types de lignes (plats, cocktails, vins, bières, etc.)
+function EditableRow({ index, total, onDelete, onInsertAfter, onMove, children }) {
+  const onDragStart = (e) => {
+    e.stopPropagation();
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/bc-row-idx", String(index));
+    e.currentTarget.parentElement.classList.add("row-dragging");
+  };
+  const onDragEnd = (e) => {
+    e.currentTarget.parentElement.classList.remove("row-dragging");
+    document.querySelectorAll(".row-edit-wrap.row-drop-before, .row-edit-wrap.row-drop-after")
+      .forEach(el => el.classList.remove("row-drop-before","row-drop-after"));
+  };
+  const onDragOver = (e) => {
+    if (!e.dataTransfer.types.includes("text/bc-row-idx")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const rect = e.currentTarget.getBoundingClientRect();
+    const before = (e.clientY - rect.top) < rect.height / 2;
+    e.currentTarget.classList.toggle("row-drop-before", before);
+    e.currentTarget.classList.toggle("row-drop-after", !before);
+  };
+  const onDragLeave = (e) => {
+    e.currentTarget.classList.remove("row-drop-before","row-drop-after");
+  };
+  const onDrop = (e) => {
+    if (!e.dataTransfer.types.includes("text/bc-row-idx")) return;
+    e.preventDefault();
+    const src = parseInt(e.dataTransfer.getData("text/bc-row-idx"), 10);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const before = (e.clientY - rect.top) < rect.height / 2;
+    let dest = before ? index : index + 1;
+    if (src < dest) dest -= 1; // ajuste car on retire avant d'insérer
+    e.currentTarget.classList.remove("row-drop-before","row-drop-after");
+    if (src !== dest && !isNaN(src)) onMove(src, dest);
+  };
+
+  return (
+    <>
+      <div
+        className="row-edit-wrap"
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+      >
+        <span
+          className="row-handle"
+          title="Glisser pour réordonner"
+          draggable
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+        >⋮⋮</span>
+        {children}
+        <button
+          className="row-delete"
+          title="Supprimer cette ligne"
+          onMouseDown={e => e.preventDefault()}
+          onClick={onDelete}
+        >×</button>
+      </div>
+      <div
+        className="row-insert"
+        title="Insérer une ligne ici"
+        onClick={onInsertAfter}
+      ></div>
+    </>
+  );
+}
+
+// AddRowBtn : bouton "+ Ajouter" placé en fin de section
+function AddRowBtn({ onAdd, label }) {
+  return (
+    <button
+      className="row-add-btn"
+      onMouseDown={e => e.preventDefault()}
+      onClick={onAdd}
+    >＋ {label || "Ajouter"}</button>
+  );
+}
+
+// Helpers de manipulation d'array
+function arrayInsert(arr, idx, item) {
+  const a = [...arr]; a.splice(idx, 0, item); return a;
+}
+function arrayRemove(arr, idx) {
+  const a = [...arr]; a.splice(idx, 1); return a;
+}
+function arrayMove(arr, from, to) {
+  const a = [...arr]; const [it] = a.splice(from, 1); a.splice(to, 0, it); return a;
+}
+
+// Templates de nouvelles lignes par type de section
+function blankItem(template) {
+  // Clone une ligne existante en vidant ses champs textuels
+  if (!template) return { nom: "" };
+  const out = {};
+  Object.keys(template).forEach(k => {
+    const v = template[k];
+    if (typeof v === "string") out[k] = "";
+    else if (typeof v === "number") out[k] = 0;
+    else out[k] = v;
+  });
+  return out;
+}
+
+// ============ v6.5 : LISTE DES POLICES POUR SECTIONS ============
+const SECTION_FONT_OPTIONS = [
+  { label: "(par défaut)", value: "" },
+  { label: "Arial", value: "Arial, sans-serif" },
+  { label: "Helvetica", value: "Helvetica, Arial, sans-serif" },
+  { label: "Georgia", value: "Georgia, serif" },
+  { label: "Times", value: "'Times New Roman', Times, serif" },
+  { label: "Courier", value: "'Courier New', monospace" },
+  { label: "Bebas Neue", value: "'Bebas Neue', Impact, sans-serif" },
+  { label: "Oswald", value: "'Oswald', sans-serif" },
+  { label: "Caveat", value: "'Caveat', cursive" },
+  { label: "Permanent Marker", value: "'Permanent Marker', Impact, sans-serif" },
+];
+
+// ============ v6.5 : SECTION FRAME ============
+// Encapsule une section avec :
+//  - bandeau hover (⋮⋮ drag, 🖋 police, ⚖ ajuster, ↺ reset)
+//  - data-section-id pour ciblage CSS auto-fit
+//  - className passé pour conserver le style natif (.section, etc.)
+//  - drag&drop intra-volet (sectionId ↔ index dans sectionOrder)
+function SectionFrame({
+  sectionId,
+  voletKey,
+  cfg, // { fontFamily, adjustedFontSize }
+  onConfigChange,
+  draggable, // bool : participe au reorder ?
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  className,
+  style,
+  children,
+}) {
+  const ref = React.useRef(null);
+  // [v6_8] State local pour le mini-menu d'espacement
+  const [spacingMenuOpen, setSpacingMenuOpen] = React.useState(false);
+
+  // [v6_8] Fermer le menu Espace au clic dehors
+  React.useEffect(() => {
+    if (!spacingMenuOpen) return;
+    const onDocClick = (e) => {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target)) setSpacingMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [spacingMenuOpen]);
+
+  // Auto-fit : on mesure le débordement du VOLET parent (qui a height fixe + overflow hidden)
+  // et on dichotomise la font-size de la section jusqu'à ce que le volet n'ait plus d'overflow.
+  const handleAutoFit = () => {
+    if (!ref.current) return;
+    const el = ref.current;
+    const volet = el.closest(".volet");
+    if (!volet) return;
+    const targetH = volet.clientHeight;
+    if (volet.scrollHeight <= targetH) {
+      // Pas de débordement à corriger — on ne fait rien (Reset existe pour annuler manuellement)
+      return;
+    }
+    // Mesure la taille native d'un item dans la section
+    const sample = el.querySelector(".item, td, li, .biere-row, .item-compact, div");
+    const baseSize = sample ? parseFloat(window.getComputedStyle(sample).fontSize) || 9 : 9;
+    const maxSize = baseSize; // on part de la taille actuelle vers le bas
+    const minSize = 7;
+    let lo = minSize, hi = maxSize, best = minSize;
+    const apply = (s) => {
+      el.style.setProperty("--bc-fit-size", s.toFixed(2) + "px");
+      el.classList.add("bc-fit-active");
+    };
+    for (let i = 0; i < 14; i++) {
+      const mid = (lo + hi) / 2;
+      apply(mid);
+      void volet.offsetHeight; // force reflow
+      if (volet.scrollHeight <= targetH) {
+        best = mid; lo = mid;
+      } else {
+        hi = mid;
+      }
+      if (Math.abs(hi - lo) < 0.1) break;
+    }
+    el.classList.remove("bc-fit-active");
+    el.style.removeProperty("--bc-fit-size");
+    onConfigChange({ ...(cfg || {}), adjustedFontSize: Number(best.toFixed(2)) });
+  };
+
+  const handleReset = () => {
+    if (!cfg) return;
+    const next = { ...cfg };
+    delete next.adjustedFontSize;
+    onConfigChange(next);
+  };
+
+  const handleFontChange = (e) => {
+    const v = e.target.value;
+    const next = { ...(cfg || {}) };
+    if (v) next.fontFamily = v; else delete next.fontFamily;
+    onConfigChange(next);
+  };
+
+  // Drag de section
+  const dragProps = draggable ? {
+    onDragStart: (e) => {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/bc-section", sectionId);
+      e.currentTarget.classList.add("section-dragging");
+      if (onDragStart) onDragStart(sectionId);
+    },
+    onDragEnd: (e) => {
+      e.currentTarget.classList.remove("section-dragging");
+      document.querySelectorAll(".section-drop-target").forEach(el => el.classList.remove("section-drop-target"));
+      if (onDragEnd) onDragEnd();
+    }
+  } : {};
+
+  const onWrapDragOver = (e) => {
+    if (!e.dataTransfer.types.includes("text/bc-section")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    e.currentTarget.classList.add("section-drop-target");
+    if (onDragOver) onDragOver(sectionId);
+  };
+  const onWrapDragLeave = (e) => {
+    e.currentTarget.classList.remove("section-drop-target");
+  };
+  const onWrapDrop = (e) => {
+    if (!e.dataTransfer.types.includes("text/bc-section")) return;
+    e.preventDefault();
+    e.currentTarget.classList.remove("section-drop-target");
+    const src = e.dataTransfer.getData("text/bc-section");
+    if (src && src !== sectionId && onDrop) onDrop(src, sectionId);
+  };
+
+  // Style local : si fontFamily ou adjustedFontSize, on injecte
+  const finalStyle = { ...(style || {}) };
+  if (cfg && cfg.fontFamily) finalStyle.fontFamily = cfg.fontFamily;
+  // [v6_8] Espacement personnalisé au-dessus de la section
+  // Valeur 0–80px, additive au marginTop existant si présent dans style
+  if (cfg && typeof cfg.spacingTop === "number" && cfg.spacingTop > 0) {
+    const baseMt = parseFloat(finalStyle.marginTop) || 0;
+    finalStyle.marginTop = (baseMt + cfg.spacingTop) + "px";
+  }
+
+  // CSS injecté pour adjustedFontSize : cible enfants du data-section-id
+  const adj = cfg && cfg.adjustedFontSize;
+
+  // [v6_8] Helpers d'espacement
+  const setSpacing = (px) => {
+    const next = { ...(cfg || {}) };
+    const clamped = Math.max(0, Math.min(80, Math.round(px)));
+    if (clamped === 0) {
+      delete next.spacingTop;
+    } else {
+      next.spacingTop = clamped;
+    }
+    onConfigChange(next);
+  };
+  const currentSpacing = (cfg && cfg.spacingTop) || 0;
+
+  return (
+    <div
+      ref={ref}
+      className={(className || "") + " has-chrome"}
+      data-section-id={sectionId}
+      style={finalStyle}
+      onDragOver={onWrapDragOver}
+      onDragLeave={onWrapDragLeave}
+      onDrop={onWrapDrop}
+    >
+      <div className={"section-chrome" + (spacingMenuOpen ? " chrome-pinned" : "")} {...dragProps} draggable={draggable}>
+        {draggable && <span className="drag-handle" title="Glisser pour déplacer la section">⋮⋮</span>}
+        <span style={{opacity:.7}}>{sectionId}</span>
+        <span className="sep"></span>
+        <select
+          title="Police de la section"
+          value={(cfg && cfg.fontFamily) || ""}
+          onChange={handleFontChange}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          {SECTION_FONT_OPTIONS.map(f => (
+            <option key={f.label} value={f.value}>{f.label}</option>
+          ))}
+        </select>
+        <span className="sep"></span>
+        <button title="Auto-ajuster la taille" onClick={handleAutoFit} onMouseDown={e => e.preventDefault()}>⚖ Ajuster</button>
+        {adj && (
+          <button title="Annuler l'ajustement" onClick={handleReset} onMouseDown={e => e.preventDefault()}>↺ Reset</button>
+        )}
+        {adj && <span style={{opacity:.7, fontSize:"10px"}}>{adj}px</span>}
+        <span className="sep"></span>
+        {/* [v6_8] Bouton espacement au-dessus de la section */}
+        <span style={{position:"relative", display:"inline-flex", alignItems:"center"}}>
+          <button
+            title={"Espace au-dessus" + (currentSpacing ? " (" + currentSpacing + "px)" : "")}
+            onClick={() => setSpacingMenuOpen(o => !o)}
+            onMouseDown={e => e.preventDefault()}
+            style={currentSpacing ? {background:"rgba(212,168,67,.4)"} : null}
+          >↕ Espace{currentSpacing ? " "+currentSpacing+"px" : ""}</button>
+          {spacingMenuOpen && (
+            <div
+              onMouseDown={e => e.stopPropagation()}
+              style={{
+                position:"absolute", top:"26px", left:0, zIndex:300,
+                background:"#1a1a2e", border:"1px solid rgba(255,255,255,.3)",
+                borderRadius:"4px", padding:"6px", display:"flex",
+                flexDirection:"column", gap:"4px", minWidth:"160px"
+              }}
+            >
+              <div style={{display:"flex", gap:"3px"}}>
+                <button onClick={() => { setSpacing(currentSpacing + 10); setSpacingMenuOpen(false); }} style={{flex:1, padding:"3px 4px", fontSize:"10px"}}>+10px</button>
+                <button onClick={() => { setSpacing(currentSpacing + 20); setSpacingMenuOpen(false); }} style={{flex:1, padding:"3px 4px", fontSize:"10px"}}>+20px</button>
+                <button onClick={() => { setSpacing(currentSpacing + 40); setSpacingMenuOpen(false); }} style={{flex:1, padding:"3px 4px", fontSize:"10px"}}>+40px</button>
+              </div>
+              <label style={{display:"flex", alignItems:"center", gap:"4px", fontSize:"10px", color:"#fff"}}>
+                <span>Réglage&nbsp;:</span>
+                <input
+                  type="number" min="0" max="80" step="1"
+                  value={currentSpacing}
+                  onChange={e => setSpacing(parseInt(e.target.value, 10) || 0)}
+                  style={{flex:1, padding:"2px 4px", fontSize:"10px", borderRadius:"3px", border:"1px solid #ccc"}}
+                />
+                <span style={{opacity:.7}}>px</span>
+              </label>
+              <div style={{display:"flex", gap:"3px"}}>
+                <button onClick={() => { setSpacing(0); setSpacingMenuOpen(false); }} style={{flex:1, padding:"3px 4px", fontSize:"10px", background:"rgba(192,57,43,.5)", border:"1px solid rgba(255,255,255,.3)"}}>↺ Reset</button>
+                <button onClick={() => setSpacingMenuOpen(false)} style={{flex:1, padding:"3px 4px", fontSize:"10px"}}>Fermer</button>
+              </div>
+            </div>
+          )}
+        </span>
+      </div>
+      {adj && (
+        <style>{`
+          [data-section-id="${sectionId}"] .item,
+          [data-section-id="${sectionId}"] .item-name,
+          [data-section-id="${sectionId}"] .item-prefix,
+          [data-section-id="${sectionId}"] .item-desc,
+          [data-section-id="${sectionId}"] .item-price,
+          [data-section-id="${sectionId}"] td,
+          [data-section-id="${sectionId}"] li,
+          [data-section-id="${sectionId}"] .biere-row { font-size: ${adj}px !important; }
+          [data-section-id="${sectionId}"] .item-desc { font-size: ${(adj * 0.88).toFixed(2)}px !important; }
+          [data-section-id="${sectionId}"] .item-price { font-size: ${(adj * 1.10).toFixed(2)}px !important; }
+        `}</style>
+      )}
+      {children}
     </div>
   );
 }
@@ -881,9 +1965,52 @@ function uid() {
   return "ov_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7);
 }
 
-// Composant : une couche d'overlays sur un volet donné
-function OverlayLayer({ voletKey, overlays, onUpdateOverlays, selectedId, onSelect, isActiveVolet }) {
+// === v6.2 : Panneau Calques (liste cliquable des overlays du volet courant) ===
+function LayerPanel({ voletKey, overlays, selectedId, onSelect }) {
+  if (!voletKey || !overlays.length) return null;
+  // Trier : front d'abord (du plus haut z-index au plus bas), puis back (idem)
+  const sorted = [...overlays].sort((a, b) => {
+    const layerA = a.layer || "front";
+    const layerB = b.layer || "front";
+    if (layerA !== layerB) return layerA === "front" ? -1 : 1;
+    return (b.zIndex || 10) - (a.zIndex || 10);
+  });
+  return (
+    <div className="layer-panel">
+      <h5>Calques ({overlays.length})</h5>
+      <div className="layer-list">
+        {sorted.map(ov => {
+          const isSelected = ov.id === selectedId;
+          const layer = ov.layer || "front";
+          const icon = ov.type === "text" ? "T" : "🖼";
+          const label = ov.type === "text"
+            ? (ov.content || "(vide)").slice(0, 28)
+            : "Image";
+          return (
+            <div
+              key={ov.id}
+              className={"layer-row" + (isSelected ? " is-selected" : "")}
+              onClick={() => onSelect(voletKey, ov.id)}
+            >
+              <span className="layer-icon">{icon}</span>
+              <span className="layer-name">{label}</span>
+              <span className="layer-badge">{layer === "back" ? "ARR" : "AV"}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// === v6.2 : Composant qui rend une liste d'overlays filtrée par layer ===
+// Le layer "back" est positionné DERRIÈRE le contenu (z-index négatif)
+// Le layer "front" est positionné DEVANT le contenu (z-index positif)
+function OverlayLayer({ voletKey, overlays, onUpdateOverlays, selectedId, onSelect, isActiveVolet, layer }) {
   const layerRef = React.useRef(null);
+
+  // Filtre selon le layer demandé. Par défaut tout overlay sans champ `layer` est "front"
+  const layerFiltered = overlays.filter(o => (o.layer || "front") === layer);
 
   const updateOverlay = (id, patch) => {
     onUpdateOverlays(overlays.map(o => o.id === id ? { ...o, ...patch } : o));
@@ -897,7 +2024,8 @@ function OverlayLayer({ voletKey, overlays, onUpdateOverlays, selectedId, onSele
 
     const startX = e.clientX, startY = e.clientY;
     const origX = overlay.x, origY = overlay.y;
-    const volet = layerRef.current.parentElement;
+    // En 2-layers, le parent direct est le wrapper de la couche, on remonte au volet
+    const volet = layerRef.current.closest(".volet");
     const voletRect = volet.getBoundingClientRect();
 
     const onMove = (ev) => {
@@ -905,7 +2033,6 @@ function OverlayLayer({ voletKey, overlays, onUpdateOverlays, selectedId, onSele
       const dy = ev.clientY - startY;
       let newX = origX + dx;
       let newY = origY + dy;
-      // Contrainte dans le volet
       newX = Math.max(0, Math.min(voletRect.width - overlay.width, newX));
       newY = Math.max(0, Math.min(voletRect.height - overlay.height, newY));
       updateOverlay(overlay.id, { x: newX, y: newY });
@@ -944,17 +2071,30 @@ function OverlayLayer({ voletKey, overlays, onUpdateOverlays, selectedId, onSele
     document.addEventListener("mouseup", onUp);
   };
 
+  // Pour le layer back, on positionne en absolu DERRIÈRE le contenu (z-index 0)
+  // Pour le layer front, on positionne DEVANT (z-index 100+)
+  // Le contenu carte est en flux normal, donc le back doit être avec z-index négatif
+  // sur sa wrapper et le front avec z-index élevé.
+  const wrapperStyle = {
+    position: "absolute",
+    inset: 0,
+    pointerEvents: "none",
+    zIndex: layer === "back" ? 0 : 100,
+  };
+
   return (
-    <div ref={layerRef} style={{position: "absolute", inset: 0, pointerEvents: "none"}}>
-      {overlays.map(ov => {
+    <div ref={layerRef} className={"overlay-layer-" + layer} style={wrapperStyle}>
+      {layerFiltered.map(ov => {
         const isSelected = selectedId === ov.id;
+        const baseZ = layer === "back" ? 1 : 101;
         const style = {
           left: ov.x + "px",
           top: ov.y + "px",
           width: ov.width + "px",
           height: ov.height + "px",
-          zIndex: ov.zIndex || 10,
+          zIndex: baseZ + (ov.zIndex || 10),
           pointerEvents: "auto",
+          opacity: (ov.opacity !== undefined ? ov.opacity : 1),
         };
         if (ov.type === "text") {
           return (
@@ -1013,7 +2153,7 @@ function OverlayLayer({ voletKey, overlays, onUpdateOverlays, selectedId, onSele
 }
 
 // Panneau de propriétés pour overlay sélectionné
-function OverlayProps({ overlay, onUpdate, onDelete, onBringFront, onSendBack, fontOptions }) {
+function OverlayProps({ overlay, onUpdate, onDelete, onBringFront, onSendBack, onSetLayer, fontOptions, layerPanel }) {
   if (!overlay) return null;
   const set = (patch) => onUpdate(patch);
 
@@ -1085,13 +2225,36 @@ function OverlayProps({ overlay, onUpdate, onDelete, onBringFront, onSendBack, f
         <input type="number" value={Math.round(overlay.height)} onChange={e => set({ height: parseInt(e.target.value) || 20 })}/>
       </div>
 
+      <div className="prop-row">
+        <label>Opacité</label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value={Math.round((overlay.opacity !== undefined ? overlay.opacity : 1) * 100)}
+          onChange={e => set({ opacity: parseInt(e.target.value) / 100 })}
+          style={{flex: 1}}
+        />
+        <span style={{fontSize:"10px",color:"#888",minWidth:"30px",textAlign:"right"}}>
+          {Math.round((overlay.opacity !== undefined ? overlay.opacity : 1) * 100)}%
+        </span>
+      </div>
+      <div className="prop-row">
+        <label>Plan</label>
+        <select value={overlay.layer || "front"} onChange={e => onSetLayer(e.target.value)}>
+          <option value="front">Avant (devant le contenu)</option>
+          <option value="back">Arrière (derrière le contenu)</option>
+        </select>
+      </div>
       <div className="btn-row">
-        <button onClick={onBringFront} title="Passer devant">↑ Devant</button>
-        <button onClick={onSendBack} title="Passer derrière">↓ Derrière</button>
+        <button onClick={onBringFront} title="Avancer dans son plan">↑ Avancer</button>
+        <button onClick={onSendBack} title="Reculer dans son plan">↓ Reculer</button>
       </div>
       <div className="btn-row">
         <button className="danger" onClick={onDelete}>🗑 Supprimer</button>
       </div>
+      {layerPanel}
       <div style={{fontSize:"10px",color:"#888",marginTop:"8px",lineHeight:"1.4"}}>
         Astuce : double-clic sur une zone de texte pour éditer.
         Touche Suppr pour effacer. Échap pour désélectionner.
@@ -1105,6 +2268,25 @@ function PagePlats({ data, onChange, fontFamily, setFontFamily, overlayProps }) 
   const updateSection = (key, newVal) => {
     onChange({ ...data, plats: { ...d, [key]: newVal }});
   };
+  // v6.5 : helpers pour les configs et titres de sections
+  const setSectionTitle = (sid, patch) => {
+    const next = { ...data.sectionTitles, [sid]: { ...(data.sectionTitles[sid] || {}), ...patch } };
+    onChange({ ...data, sectionTitles: next });
+  };
+  const setSectionCfg = (sid, cfg) => {
+    const next = { ...data.sectionConfig };
+    if (!cfg || (Object.keys(cfg).length === 0)) delete next[sid]; else next[sid] = cfg;
+    onChange({ ...data, sectionConfig: next });
+  };
+  const reorderSection = (voletKey, src, dst) => {
+    const order = [...(data.sectionOrder[voletKey] || [])];
+    const i = order.indexOf(src), j = order.indexOf(dst);
+    if (i < 0 || j < 0) return;
+    order.splice(i, 1);
+    order.splice(j, 0, src);
+    onChange({ ...data, sectionOrder: { ...data.sectionOrder, [voletKey]: order }});
+  };
+
   const updateItem = (section, idx, newItem) => {
     let arr;
     if (section === "cocktails" || section === "virgins") {
@@ -1117,16 +2299,36 @@ function PagePlats({ data, onChange, fontFamily, setFontFamily, overlayProps }) 
       updateSection(section, arr);
     }
   };
+  // v6.5 : add / insert / remove / move sur n'importe quelle section
+  const sectionArr = (section) => (section === "cocktails" || section === "virgins") ? d[section].items : d[section];
+  const setSectionArr = (section, arr) => {
+    if (section === "cocktails" || section === "virgins") {
+      updateSection(section, { ...d[section], items: arr });
+    } else {
+      updateSection(section, arr);
+    }
+  };
+  const insertItemAt = (section, idx) => {
+    const arr = sectionArr(section);
+    const tpl = arr[arr.length - 1] || arr[0];
+    setSectionArr(section, arrayInsert(arr, idx, blankItem(tpl)));
+  };
+  const removeItemAt = (section, idx) => {
+    setSectionArr(section, arrayRemove(sectionArr(section), idx));
+  };
+  const moveItem = (section, from, to) => {
+    setSectionArr(section, arrayMove(sectionArr(section), from, to));
+  };
 
   // helper pour activer un volet au clic
   const onVoletMouseDown = (voletKey) => (e) => {
-    // seulement si on clique sur un élément du volet lui-même, pas un overlay
     if (e.target.closest(".overlay-item")) return;
     overlayProps.setActiveVolet(voletKey);
     overlayProps.selectOverlay(null, null);
   };
 
-  const renderOverlays = (voletKey) => (
+  // v6.2 : 2 layers — back (derrière contenu) et front (devant)
+  const renderOverlaysBack = (voletKey) => (
     <OverlayLayer
       voletKey={voletKey}
       overlays={overlayProps.getOverlays(voletKey)}
@@ -1134,46 +2336,107 @@ function PagePlats({ data, onChange, fontFamily, setFontFamily, overlayProps }) 
       selectedId={overlayProps.selectedVoletKey === voletKey ? overlayProps.selectedId : null}
       onSelect={(vk, id) => overlayProps.selectOverlay(vk, id)}
       isActiveVolet={overlayProps.activeVolet === voletKey}
+      layer="back"
     />
   );
+  const renderOverlaysFront = (voletKey) => (
+    <OverlayLayer
+      voletKey={voletKey}
+      overlays={overlayProps.getOverlays(voletKey)}
+      onUpdateOverlays={(list) => overlayProps.setOverlays(voletKey, list)}
+      selectedId={overlayProps.selectedVoletKey === voletKey ? overlayProps.selectedId : null}
+      onSelect={(vk, id) => overlayProps.selectOverlay(vk, id)}
+      isActiveVolet={overlayProps.activeVolet === voletKey}
+      layer="front"
+    />
+  );
+  const renderOverlays = (voletKey) => renderOverlaysFront(voletKey);
+
+  // v6.5 : rendu d'une section par sectionId
+  const renderPlatsSection = (sid, voletKey) => {
+    const t = (data.sectionTitles && data.sectionTitles[sid]) || {};
+    const cfg = (data.sectionConfig && data.sectionConfig[sid]) || null;
+    const sectionFrameProps = {
+      sectionId: sid, voletKey, cfg,
+      onConfigChange: c => setSectionCfg(sid, c),
+      draggable: true,
+      onDrop: (src, dst) => reorderSection(voletKey, src, dst),
+    };
+
+    if (sid === "cocktails" || sid === "virgins") {
+      const sec = d[sid];
+      return (
+        <SectionFrame key={sid} {...sectionFrameProps} className="section" style={sid === "virgins" ? {marginTop:"6px"} : {marginTop:"55px"}}>
+          <div className="section-title">
+            <Editable value={t.titre || ""} onChange={v => setSectionTitle(sid, { titre: v })}/>
+          </div>
+          <div className="price-banner">
+            <Editable value={sec.prix} onChange={v => updateSection(sid, {...sec, prix: v})}/>
+          </div>
+          {sec.items.map((it, i) => (
+            <EditableRow
+              key={sid+i}
+              index={i}
+              total={sec.items.length}
+              onDelete={() => removeItemAt(sid, i)}
+              onInsertAfter={() => insertItemAt(sid, i + 1)}
+              onMove={(f, t) => moveItem(sid, f, t)}
+            >
+              <ItemRow item={it} onChange={ni => updateItem(sid, i, ni)} showPrice={false}/>
+            </EditableRow>
+          ))}
+          <AddRowBtn onAdd={() => insertItemAt(sid, sec.items.length)} label="Ajouter une ligne"/>
+        </SectionFrame>
+      );
+    }
+    if (sid === "tapas" || sid === "plats_principaux" || sid === "desserts") {
+      const arr = d[sid];
+      return (
+        <React.Fragment key={sid}>
+          <div className="section-title-dark">
+            <Editable value={t.titre || ""} onChange={v => setSectionTitle(sid, { titre: v })}/>
+          </div>
+          {t.soustitre !== undefined && (
+            <div className="section-subtitle">
+              <Editable value={t.soustitre || ""} onChange={v => setSectionTitle(sid, { soustitre: v })}/>
+            </div>
+          )}
+          <SectionFrame {...sectionFrameProps} className="section">
+            {arr.map((it, i) => (
+              <EditableRow
+                key={sid+i}
+                index={i}
+                total={arr.length}
+                onDelete={() => removeItemAt(sid, i)}
+                onInsertAfter={() => insertItemAt(sid, i + 1)}
+                onMove={(f, t) => moveItem(sid, f, t)}
+              >
+                <ItemRow item={it} onChange={ni => updateItem(sid, i, ni)}/>
+              </EditableRow>
+            ))}
+            <AddRowBtn onAdd={() => insertItemAt(sid, arr.length)} label="Ajouter une ligne"/>
+          </SectionFrame>
+        </React.Fragment>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="page page-plats">
       {/* VOLET 1 : COCKTAILS + VIRGINS (fond blanc) */}
       <div className={"volet v-white" + (overlayProps.activeVolet === "plats_v1" ? " active-volet" : "")} onMouseDown={onVoletMouseDown("plats_v1")}>
+        {renderOverlaysBack("plats_v1")}
         <div className="hachures"></div>
         <img src={LOGO_CHAT} className="logo-chat" alt="chat"/>
-
-        <div className="section" style={{marginTop: "55px"}}>
-          <div className="section-title">• COCKTAILS •</div>
-          <div className="price-banner">
-            <Editable value={d.cocktails.prix} onChange={v => updateSection("cocktails", {...d.cocktails, prix: v})}/>
-          </div>
-          {d.cocktails.items.map((it, i) => (
-            <ItemRow key={"ck"+i} item={it} onChange={ni => updateItem("cocktails", i, ni)} showPrice={false}/>
-          ))}
-        </div>
-
-        <div className="section" style={{marginTop: "6px"}}>
-          <div className="section-title">• LES VIRGINS •</div>
-          <div className="price-banner">
-            <Editable value={d.virgins.prix} onChange={v => updateSection("virgins", {...d.virgins, prix: v})}/>
-          </div>
-          {d.virgins.items.map((it, i) => (
-            <ItemRow key={"vg"+i} item={it} onChange={ni => updateItem("virgins", i, ni)} showPrice={false}/>
-          ))}
-        </div>
+        {(data.sectionOrder.plats_v1 || []).map(sid => renderPlatsSection(sid, "plats_v1"))}
         {renderOverlays("plats_v1")}
       </div>
 
       {/* VOLET 2 : TAPAS + PLATS + DESSERTS (fond noir) */}
       <div className={"volet v-black" + (overlayProps.activeVolet === "plats_v2" ? " active-volet" : "")} onMouseDown={onVoletMouseDown("plats_v2")}>
-        <div className="section-title-dark">TAPAS DU BLACK CAT</div>
-        <div className="section">
-          {d.tapas.map((it, i) => (
-            <ItemRow key={"tp"+i} item={it} onChange={ni => updateItem("tapas", i, ni)}/>
-          ))}
-        </div>
+        {renderOverlaysBack("plats_v2")}
+        {(data.sectionOrder.plats_v2 || []).map(sid => renderPlatsSection(sid, "plats_v2"))}
 
         <div className="font-picker-inline">
           <span>Police :</span>
@@ -1184,21 +2447,6 @@ function PagePlats({ data, onChange, fontFamily, setFontFamily, overlayProps }) 
           </select>
         </div>
 
-        <div className="section-title-dark">PLATS</div>
-        <div className="section-subtitle">Accompagnement frites & salade</div>
-        <div className="section">
-          {d.plats_principaux.map((it, i) => (
-            <ItemRow key={"pl"+i} item={it} onChange={ni => updateItem("plats_principaux", i, ni)}/>
-          ))}
-        </div>
-
-        <div className="section-title-dark">DESSERTS</div>
-        <div className="section">
-          {d.desserts.map((it, i) => (
-            <ItemRow key={"ds"+i} item={it} onChange={ni => updateItem("desserts", i, ni)}/>
-          ))}
-        </div>
-
         <div className="footer-mentions-v2">
           <Editable value={d.footer} onChange={v => updateSection("footer", v)} multiline/>
         </div>
@@ -1207,6 +2455,7 @@ function PagePlats({ data, onChange, fontFamily, setFontFamily, overlayProps }) 
 
       {/* VOLET 3 : COUVERTURE (fond noir, logo texte + panthère) */}
       <div className={"volet v-black volet-couverture" + (overlayProps.activeVolet === "plats_v3" ? " active-volet" : "")} onMouseDown={onVoletMouseDown("plats_v3")}>
+        {renderOverlaysBack("plats_v3")}
         <img src={LOGO_TEXTE} className="logo-texte" alt="The Black Cat"/>
         <img src={LOGO_PANTH} className="logo-panth" alt="panthère"/>
         {renderOverlays("plats_v3")}
@@ -1225,12 +2474,77 @@ function PageBoissons({ data, onChange, overlayProps }) {
     update(key, arr);
   };
 
+  // v6.5 helpers titres / configs / ordre
+  const setSectionTitle = (sid, patch) => {
+    const next = { ...data.sectionTitles, [sid]: { ...(data.sectionTitles[sid] || {}), ...patch } };
+    onChange({ ...data, sectionTitles: next });
+  };
+  const setSectionCfg = (sid, cfg) => {
+    const next = { ...data.sectionConfig };
+    if (!cfg || (Object.keys(cfg).length === 0)) delete next[sid]; else next[sid] = cfg;
+    onChange({ ...data, sectionConfig: next });
+  };
+  const reorderSection = (voletKey, src, dst) => {
+    const order = [...(data.sectionOrder[voletKey] || [])];
+    const i = order.indexOf(src), j = order.indexOf(dst);
+    if (i < 0 || j < 0) return;
+    order.splice(i, 1);
+    order.splice(j, 0, src);
+    onChange({ ...data, sectionOrder: { ...data.sectionOrder, [voletKey]: order }});
+  };
+
+  // v6.5 add / insert / remove / move pour les sections boissons
+  // Map sectionId -> chemin dans data.boissons
+  const SECTION_PATHS = {
+    chaudes: "chaudes", softs: "softs", apero: "apero",
+    bieres_pression: "bieres_pression", bieres_bouteilles: "bieres_bouteilles",
+    shots: "shots", mixer: "mixer", spritz: "spritz",
+    vins: null, // groupe parent — pas de tableau direct
+    vins_blanc: ["vins","blanc"], vins_rouge: ["vins","rouge"], vins_rose: ["vins","rose"],
+    rhums_arranges: ["rhums_arranges","items"],
+  };
+  const getArr = (sid) => {
+    const p = SECTION_PATHS[sid];
+    if (!p) return [];
+    if (typeof p === "string") return d[p] || [];
+    return (d[p[0]] && d[p[0]][p[1]]) || [];
+  };
+  const setArr = (sid, arr) => {
+    const p = SECTION_PATHS[sid];
+    if (!p) return;
+    if (typeof p === "string") update(p, arr);
+    else update(p[0], { ...d[p[0]], [p[1]]: arr });
+  };
+  const insertItem = (sid, idx) => {
+    const arr = getArr(sid);
+    const tpl = arr[arr.length - 1] || arr[0];
+    let blank;
+    if (sid === "rhums_arranges") {
+      blank = "";
+    } else if (sid === "shots") {
+      // [v6_8] Garantir un template complet pour shots même si arr vide ou tpl partiel
+      blank = { nom: "", prix: "", metre: "" };
+    } else if (sid === "mixer" || sid === "spritz" || sid === "softs" || sid === "apero" || sid === "chaudes") {
+      blank = { nom: "", prix: "" };
+    } else {
+      blank = blankItem(tpl);
+    }
+    setArr(sid, arrayInsert(arr, idx, blank));
+  };
+  const removeItem = (sid, idx) => setArr(sid, arrayRemove(getArr(sid), idx));
+  const moveItem = (sid, from, to) => setArr(sid, arrayMove(getArr(sid), from, to));
+  const updateItemInSection = (sid, idx, ni) => {
+    const arr = [...getArr(sid)];
+    arr[idx] = ni;
+    setArr(sid, arr);
+  };
+
   const onVoletMouseDown = (voletKey) => (e) => {
     if (e.target.closest(".overlay-item")) return;
     overlayProps.setActiveVolet(voletKey);
     overlayProps.selectOverlay(null, null);
   };
-  const renderOverlays = (voletKey) => (
+  const renderOverlaysBack = (voletKey) => (
     <OverlayLayer
       voletKey={voletKey}
       overlays={overlayProps.getOverlays(voletKey)}
@@ -1238,173 +2552,338 @@ function PageBoissons({ data, onChange, overlayProps }) {
       selectedId={overlayProps.selectedVoletKey === voletKey ? overlayProps.selectedId : null}
       onSelect={(vk, id) => overlayProps.selectOverlay(vk, id)}
       isActiveVolet={overlayProps.activeVolet === voletKey}
+      layer="back"
     />
   );
+  const renderOverlaysFront = (voletKey) => (
+    <OverlayLayer
+      voletKey={voletKey}
+      overlays={overlayProps.getOverlays(voletKey)}
+      onUpdateOverlays={(list) => overlayProps.setOverlays(voletKey, list)}
+      selectedId={overlayProps.selectedVoletKey === voletKey ? overlayProps.selectedId : null}
+      onSelect={(vk, id) => overlayProps.selectOverlay(vk, id)}
+      isActiveVolet={overlayProps.activeVolet === voletKey}
+      layer="front"
+    />
+  );
+
+  // Helper : props communes au SectionFrame
+  const sfProps = (sid, voletKey) => ({
+    sectionId: sid, voletKey,
+    cfg: (data.sectionConfig && data.sectionConfig[sid]) || null,
+    onConfigChange: c => setSectionCfg(sid, c),
+    draggable: true,
+    onDrop: (src, dst) => reorderSection(voletKey, src, dst),
+  });
+  const titleOf = (sid) => (data.sectionTitles && data.sectionTitles[sid] && data.sectionTitles[sid].titre) || "";
+
+  // Renderer générique pour sections "compactes" (chaudes, softs, apero, mixer, spritz, bouteilles)
+  const renderCompactSection = (sid, voletKey) => {
+    const arr = getArr(sid);
+    return (
+      <SectionFrame key={sid} {...sfProps(sid, voletKey)}>
+        <div className="col-title">
+          <Editable value={titleOf(sid)} onChange={v => setSectionTitle(sid, { titre: v })}/>
+        </div>
+        {arr.map((it, i) => (
+          <EditableRow
+            key={sid+i} index={i} total={arr.length}
+            onDelete={() => removeItem(sid, i)}
+            onInsertAfter={() => insertItem(sid, i+1)}
+            onMove={(f,t) => moveItem(sid, f, t)}
+          >
+            <div className="item-compact">
+              <Editable className="name" value={it.nom} onChange={v => updateItemInSection(sid, i, {...it, nom: v})}/>
+              <Editable className="price" value={it.prix} onChange={v => updateItemInSection(sid, i, {...it, prix: v})}/>
+            </div>
+          </EditableRow>
+        ))}
+        <AddRowBtn onAdd={() => insertItem(sid, arr.length)}/>
+      </SectionFrame>
+    );
+  };
+
+  // Renderer pour vins (blanc/rouge/rose) — chaque sous-bloc devient sa propre section
+  const renderVinsSection = (sid, voletKey, label) => {
+    const arr = getArr(sid);
+    return (
+      <SectionFrame key={sid} {...sfProps(sid, voletKey)}>
+        <div className="col-title">
+          <Editable value={titleOf(sid)} onChange={v => setSectionTitle(sid, { titre: v })}/>
+        </div>
+        <table className="vin-table">
+          <thead>
+            <tr><td></td><td style={{textAlign:"right", fontSize:"9px"}}>VERRE</td><td style={{textAlign:"right", fontSize:"9px"}}>BOUT.</td></tr>
+          </thead>
+          <tbody>
+            {arr.map((it, i) => (
+              <tr key={sid+i}>
+                <td>
+                  <span className="row-edit-wrap" style={{display:"inline-block", width:"100%"}}>
+                    <span className="row-handle" draggable
+                      onDragStart={e => { e.stopPropagation(); e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/bc-row-idx", String(i)); }}
+                    >⋮⋮</span>
+                    <Editable value={it.nom} onChange={v => updateItemInSection(sid, i, {...it, nom: v})}/>
+                    <button className="row-delete" onMouseDown={e => e.preventDefault()} onClick={() => removeItem(sid, i)}>×</button>
+                  </span>
+                </td>
+                <td className="price"><Editable value={it.verre} onChange={v => updateItemInSection(sid, i, {...it, verre: v})}/></td>
+                <td className="price"><Editable value={it.bout} onChange={v => updateItemInSection(sid, i, {...it, bout: v})}/></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <AddRowBtn onAdd={() => insertItem(sid, arr.length)} label="Ajouter un vin"/>
+      </SectionFrame>
+    );
+  };
+
+  // Renderer rhums arrangés (liste de strings)
+  const renderRhums = (sid, voletKey) => {
+    const arr = getArr(sid);
+    return (
+      <SectionFrame key={sid} {...sfProps(sid, voletKey)}>
+        <div className="col-title">
+          <Editable value={titleOf(sid)} onChange={v => setSectionTitle(sid, { titre: v })}/>
+        </div>
+        <div style={{fontSize:"10px", textAlign:"center", color:"#C0392B", fontWeight:700, marginBottom:"4px"}}>
+          <Editable value={d.rhums_arranges.prix} onChange={v => update("rhums_arranges", {...d.rhums_arranges, prix: v})}/>
+        </div>
+        <div style={{fontSize:"9px", textAlign:"center", fontStyle:"italic", marginBottom:"6px"}}>
+          <Editable value={d.rhums_arranges.sous_titre} onChange={v => update("rhums_arranges", {...d.rhums_arranges, sous_titre: v})}/>
+        </div>
+        {arr.map((r, i) => (
+          <EditableRow
+            key={sid+i} index={i} total={arr.length}
+            onDelete={() => removeItem(sid, i)}
+            onInsertAfter={() => insertItem(sid, i+1)}
+            onMove={(f,t) => moveItem(sid, f, t)}
+          >
+            <div style={{fontSize:"11px", textAlign:"center", fontWeight:700, padding:"2px 0", borderBottom:"1px solid #eee"}}>
+              <Editable value={r} onChange={v => updateItemInSection(sid, i, v)}/>
+            </div>
+          </EditableRow>
+        ))}
+        <AddRowBtn onAdd={() => insertItem(sid, arr.length)} label="Ajouter un rhum"/>
+      </SectionFrame>
+    );
+  };
+
+  // Renderer bières pression (3 prix par ligne)
+  const renderBieresPression = (sid, voletKey) => {
+    const arr = getArr(sid);
+    return (
+      <SectionFrame key={sid} {...sfProps(sid, voletKey)}>
+        <div className="col-title">
+          <Editable value={titleOf(sid)} onChange={v => setSectionTitle(sid, { titre: v })}/>
+        </div>
+        <div className="biere-grid">
+          <div className="biere-grid-header">
+            <span></span>
+            <span>25CL</span>
+            <span>50CL</span>
+            <span>GIRAFE</span>
+          </div>
+          {arr.map((b, i) => (
+            <EditableRow
+              key={sid+i} index={i} total={arr.length}
+              onDelete={() => removeItem(sid, i)}
+              onInsertAfter={() => insertItem(sid, i+1)}
+              onMove={(f,t) => moveItem(sid, f, t)}
+            >
+              <div className="biere-grid-row">
+                <div>
+                  <div className="biere-name">
+                    <Editable value={b.nom} onChange={v => updateItemInSection(sid, i, {...b, nom: v})}/>
+                    {" "}
+                    <Editable value={b.degre} onChange={v => updateItemInSection(sid, i, {...b, degre: v})}/>
+                  </div>
+                  <div className="biere-desc">
+                    <Editable value={b.desc} onChange={v => updateItemInSection(sid, i, {...b, desc: v})} multiline/>
+                  </div>
+                </div>
+                <div className="biere-grid-price"><Editable value={b.p25} onChange={v => updateItemInSection(sid, i, {...b, p25: v})}/></div>
+                <div className="biere-grid-price"><Editable value={b.p50} onChange={v => updateItemInSection(sid, i, {...b, p50: v})}/></div>
+                <div className="biere-grid-price"><Editable value={b.girafe} onChange={v => updateItemInSection(sid, i, {...b, girafe: v})}/></div>
+              </div>
+            </EditableRow>
+          ))}
+        </div>
+        <AddRowBtn onAdd={() => insertItem(sid, arr.length)} label="Ajouter une bière"/>
+        <div style={{fontSize:"10px", fontStyle:"italic", marginTop:"6px", color:"#C0392B", fontWeight:700}}>
+          <Editable value={d.biere_mention} onChange={v => update("biere_mention", v)}/>
+        </div>
+      </SectionFrame>
+    );
+  };
+
+  // Renderer shots (avec metre en plus) - table pour alignement propre
+  const renderShots = (sid, voletKey) => {
+    const arr = getArr(sid);
+    return (
+      <SectionFrame key={sid} {...sfProps(sid, voletKey)}>
+        <div className="col-title">
+          <Editable value={titleOf(sid)} onChange={v => setSectionTitle(sid, { titre: v })}/>
+        </div>
+        <table className="shots-table">
+          <thead>
+            <tr>
+              <td></td>
+              <td style={{textAlign:"right", fontSize:"9px", fontWeight:600, paddingBottom:"3px"}}>SHOT</td>
+              <td style={{textAlign:"right", fontSize:"9px", fontWeight:600, paddingBottom:"3px"}}>LE MÈTRE</td>
+            </tr>
+          </thead>
+          <tbody>
+            {arr.map((it, i) => (
+              <tr key={sid+i}>
+                <td>
+                  <span className="row-edit-wrap" style={{display:"inline-block", width:"100%"}}>
+                    <span className="row-handle" draggable
+                      onDragStart={e => { e.stopPropagation(); e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/bc-row-idx", String(i)); }}
+                    >⋮⋮</span>
+                    <Editable className="shots-name" value={it.nom} onChange={v => updateItemInSection(sid, i, {...it, nom: v})}/>
+                    <button className="row-delete" onMouseDown={e => e.preventDefault()} onClick={() => removeItem(sid, i)}>×</button>
+                  </span>
+                </td>
+                <td className="price"><Editable value={it.prix} onChange={v => updateItemInSection(sid, i, {...it, prix: v})}/></td>
+                <td className="price"><Editable value={it.metre} onChange={v => updateItemInSection(sid, i, {...it, metre: v})}/></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <AddRowBtn onAdd={() => insertItem(sid, arr.length)} label="Ajouter un shot"/>
+      </SectionFrame>
+    );
+  };
+
+  // Renderer groupe VINS (parent + 3 sous-sections en cascade)
+  const renderVinsGroupe = (sid, voletKey) => {
+    return (
+      <SectionFrame key={sid} {...sfProps(sid, voletKey)}>
+        {/* Titre parent VINS */}
+        <div className="col-title">
+          <Editable value={titleOf(sid)} onChange={v => setSectionTitle(sid, { titre: v })}/>
+        </div>
+        {/* BLANCS */}
+        <div style={{marginBottom:"4px"}}>
+          <div style={{fontSize:"9px", fontWeight:700, textTransform:"uppercase", letterSpacing:"1px", color:"#555", borderBottom:"1px solid #ddd", marginBottom:"3px"}}>
+            <Editable value={titleOf("vins_blanc")} onChange={v => setSectionTitle("vins_blanc", { titre: v })}/>
+          </div>
+          <table className="vin-table">
+            <thead>
+              <tr><td></td><td style={{textAlign:"right", fontSize:"8px", opacity:.7}}>VERRE</td><td style={{textAlign:"right", fontSize:"8px", opacity:.7}}>BOUT.</td></tr>
+            </thead>
+            <tbody>
+              {getArr("vins_blanc").map((it, i) => (
+                <tr key={"vb"+i}>
+                  <td><span className="row-edit-wrap" style={{display:"inline-block", width:"100%"}}>
+                    <span className="row-handle" draggable onDragStart={e => { e.stopPropagation(); e.dataTransfer.setData("text/bc-row-idx", String(i)); }}>⋮⋮</span>
+                    <Editable value={it.nom} onChange={v => updateItemInSection("vins_blanc", i, {...it, nom: v})}/>
+                    <button className="row-delete" onMouseDown={e => e.preventDefault()} onClick={() => removeItem("vins_blanc", i)}>×</button>
+                  </span></td>
+                  <td className="price"><Editable value={it.verre} onChange={v => updateItemInSection("vins_blanc", i, {...it, verre: v})}/></td>
+                  <td className="price"><Editable value={it.bout} onChange={v => updateItemInSection("vins_blanc", i, {...it, bout: v})}/></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <AddRowBtn onAdd={() => insertItem("vins_blanc", getArr("vins_blanc").length)} label="Ajouter"/>
+        </div>
+        {/* ROSÉS */}
+        <div style={{marginBottom:"4px"}}>
+          <div style={{fontSize:"9px", fontWeight:700, textTransform:"uppercase", letterSpacing:"1px", color:"#c0748a", borderBottom:"1px solid #ddd", marginBottom:"3px"}}>
+            <Editable value={titleOf("vins_rose")} onChange={v => setSectionTitle("vins_rose", { titre: v })}/>
+          </div>
+          <table className="vin-table">
+            <thead>
+              <tr><td></td><td style={{textAlign:"right", fontSize:"8px", opacity:.7}}>VERRE</td><td style={{textAlign:"right", fontSize:"8px", opacity:.7}}>BOUT.</td></tr>
+            </thead>
+            <tbody>
+              {getArr("vins_rose").map((it, i) => (
+                <tr key={"vr"+i}>
+                  <td><span className="row-edit-wrap" style={{display:"inline-block", width:"100%"}}>
+                    <span className="row-handle" draggable onDragStart={e => { e.stopPropagation(); e.dataTransfer.setData("text/bc-row-idx", String(i)); }}>⋮⋮</span>
+                    <Editable value={it.nom} onChange={v => updateItemInSection("vins_rose", i, {...it, nom: v})}/>
+                    <button className="row-delete" onMouseDown={e => e.preventDefault()} onClick={() => removeItem("vins_rose", i)}>×</button>
+                  </span></td>
+                  <td className="price"><Editable value={it.verre} onChange={v => updateItemInSection("vins_rose", i, {...it, verre: v})}/></td>
+                  <td className="price"><Editable value={it.bout} onChange={v => updateItemInSection("vins_rose", i, {...it, bout: v})}/></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <AddRowBtn onAdd={() => insertItem("vins_rose", getArr("vins_rose").length)} label="Ajouter"/>
+        </div>
+        {/* ROUGES */}
+        <div style={{marginBottom:"4px"}}>
+          <div style={{fontSize:"9px", fontWeight:700, textTransform:"uppercase", letterSpacing:"1px", color:"#8b2020", borderBottom:"1px solid #ddd", marginBottom:"3px"}}>
+            <Editable value={titleOf("vins_rouge")} onChange={v => setSectionTitle("vins_rouge", { titre: v })}/>
+          </div>
+          <table className="vin-table">
+            <thead>
+              <tr><td></td><td style={{textAlign:"right", fontSize:"8px", opacity:.7}}>VERRE</td><td style={{textAlign:"right", fontSize:"8px", opacity:.7}}>BOUT.</td></tr>
+            </thead>
+            <tbody>
+              {getArr("vins_rouge").map((it, i) => (
+                <tr key={"vrg"+i}>
+                  <td><span className="row-edit-wrap" style={{display:"inline-block", width:"100%"}}>
+                    <span className="row-handle" draggable onDragStart={e => { e.stopPropagation(); e.dataTransfer.setData("text/bc-row-idx", String(i)); }}>⋮⋮</span>
+                    <Editable value={it.nom} onChange={v => updateItemInSection("vins_rouge", i, {...it, nom: v})}/>
+                    <button className="row-delete" onMouseDown={e => e.preventDefault()} onClick={() => removeItem("vins_rouge", i)}>×</button>
+                  </span></td>
+                  <td className="price"><Editable value={it.verre} onChange={v => updateItemInSection("vins_rouge", i, {...it, verre: v})}/></td>
+                  <td className="price"><Editable value={it.bout} onChange={v => updateItemInSection("vins_rouge", i, {...it, bout: v})}/></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <AddRowBtn onAdd={() => insertItem("vins_rouge", getArr("vins_rouge").length)} label="Ajouter"/>
+        </div>
+        {/* Mention vin du moment */}
+        <div style={{fontSize:"9px", fontStyle:"italic", marginTop:"4px", color:"#C0392B"}}>
+          <Editable value={d.vins.mention} onChange={v => update("vins", {...d.vins, mention: v})}/>
+        </div>
+      </SectionFrame>
+    );
+  };
+
+  // Aiguillage par sectionId
+  const renderBoissonsSection = (sid, voletKey) => {
+    if (sid === "chaudes" || sid === "softs" || sid === "apero" ||
+        sid === "bieres_bouteilles" || sid === "mixer" || sid === "spritz") {
+      return renderCompactSection(sid, voletKey);
+    }
+    if (sid === "vins") return renderVinsGroupe(sid, voletKey);
+    if (sid === "vins_blanc") return renderVinsSection(sid, voletKey, "BLANC");
+    if (sid === "vins_rouge") return renderVinsSection(sid, voletKey, "ROUGE");
+    if (sid === "vins_rose")  return renderVinsSection(sid, voletKey, "ROSÉ");
+    if (sid === "bieres_pression") return renderBieresPression(sid, voletKey);
+    if (sid === "shots") return renderShots(sid, voletKey);
+    if (sid === "rhums_arranges") return renderRhums(sid, voletKey);
+    return null;
+  };
 
   return (
     <div className="page page-boissons">
       {/* VOLET 1 */}
       <div className={"volet v-white" + (overlayProps.activeVolet === "boissons_v1" ? " active-volet" : "")} onMouseDown={onVoletMouseDown("boissons_v1")}>
-        <div>
-          <div className="col-title">BOISSONS CHAUDES</div>
-          {d.chaudes.map((it, i) => (
-            <div className="item-compact" key={"ch"+i}>
-              <Editable className="name" value={it.nom} onChange={v => updateItem("chaudes", i, {...it, nom: v})}/>
-              <Editable className="price" value={it.prix} onChange={v => updateItem("chaudes", i, {...it, prix: v})}/>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div className="col-title">SOFTS</div>
-          {d.softs.map((it, i) => (
-            <div className="item-compact" key={"sf"+i}>
-              <Editable className="name" value={it.nom} onChange={v => updateItem("softs", i, {...it, nom: v})}/>
-              <Editable className="price" value={it.prix} onChange={v => updateItem("softs", i, {...it, prix: v})}/>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div className="col-title">APÉRO</div>
-          {d.apero.map((it, i) => (
-            <div className="item-compact" key={"ap"+i}>
-              <Editable className="name" value={it.nom} onChange={v => updateItem("apero", i, {...it, nom: v})}/>
-              <Editable className="price" value={it.prix} onChange={v => updateItem("apero", i, {...it, prix: v})}/>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div className="col-title">VINS</div>
-          <table className="vin-table">
-            <thead>
-              <tr><td></td><td style={{textAlign:"right", fontSize:"9px"}}>VERRE</td><td style={{textAlign:"right", fontSize:"9px"}}>BOUT.</td></tr>
-            </thead>
-            <tbody>
-              <tr><td colSpan="3" style={{color:"#C0392B", fontWeight:700, paddingTop:"4px"}}>BLANC</td></tr>
-              {d.vins.blanc.map((it, i) => (
-                <tr key={"vb"+i}>
-                  <td><Editable value={it.nom} onChange={v => {const a=[...d.vins.blanc]; a[i]={...it,nom:v}; update("vins", {...d.vins, blanc:a});}}/></td>
-                  <td className="price"><Editable value={it.verre} onChange={v => {const a=[...d.vins.blanc]; a[i]={...it,verre:v}; update("vins", {...d.vins, blanc:a});}}/></td>
-                  <td className="price"><Editable value={it.bout} onChange={v => {const a=[...d.vins.blanc]; a[i]={...it,bout:v}; update("vins", {...d.vins, blanc:a});}}/></td>
-                </tr>
-              ))}
-              <tr><td colSpan="3" style={{color:"#C0392B", fontWeight:700, paddingTop:"4px"}}>ROUGE</td></tr>
-              {d.vins.rouge.map((it, i) => (
-                <tr key={"vr"+i}>
-                  <td><Editable value={it.nom} onChange={v => {const a=[...d.vins.rouge]; a[i]={...it,nom:v}; update("vins", {...d.vins, rouge:a});}}/></td>
-                  <td className="price"><Editable value={it.verre} onChange={v => {const a=[...d.vins.rouge]; a[i]={...it,verre:v}; update("vins", {...d.vins, rouge:a});}}/></td>
-                  <td className="price"><Editable value={it.bout} onChange={v => {const a=[...d.vins.rouge]; a[i]={...it,bout:v}; update("vins", {...d.vins, rouge:a});}}/></td>
-                </tr>
-              ))}
-              <tr><td colSpan="3" style={{color:"#C0392B", fontWeight:700, paddingTop:"4px"}}>ROSÉ</td></tr>
-              {d.vins.rose.map((it, i) => (
-                <tr key={"vz"+i}>
-                  <td><Editable value={it.nom} onChange={v => {const a=[...d.vins.rose]; a[i]={...it,nom:v}; update("vins", {...d.vins, rose:a});}}/></td>
-                  <td className="price"><Editable value={it.verre} onChange={v => {const a=[...d.vins.rose]; a[i]={...it,verre:v}; update("vins", {...d.vins, rose:a});}}/></td>
-                  <td className="price"><Editable value={it.bout} onChange={v => {const a=[...d.vins.rose]; a[i]={...it,bout:v}; update("vins", {...d.vins, rose:a});}}/></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div style={{fontSize:"10px", fontStyle:"italic", marginTop:"4px", color:"#C0392B"}}>
-            <Editable value={d.vins.mention} onChange={v => update("vins", {...d.vins, mention: v})}/>
-          </div>
-        </div>
+        {renderOverlaysBack("boissons_v1")}
+        {(data.sectionOrder.boissons_v1 || []).map(sid => renderBoissonsSection(sid, "boissons_v1"))}
+        {renderOverlaysFront("boissons_v1")}
       </div>
 
       {/* VOLET 2 */}
       <div className={"volet v-white" + (overlayProps.activeVolet === "boissons_v2" ? " active-volet" : "")} onMouseDown={onVoletMouseDown("boissons_v2")}>
-        <div>
-          <div className="col-title">BIÈRES PRESSION</div>
-          <div style={{fontSize:"9px", textAlign:"right", fontWeight:600, marginBottom:"4px"}}>25CL &nbsp;|&nbsp; 50CL &nbsp;|&nbsp; GIRAFE 2.5L</div>
-          {d.bieres_pression.map((b, i) => (
-            <div className="biere-row" key={"bp"+i}>
-              <div className="biere-name">
-                <Editable value={b.nom} onChange={v => updateItem("bieres_pression", i, {...b, nom: v})}/>
-                {" "}
-                <Editable value={b.degre} onChange={v => updateItem("bieres_pression", i, {...b, degre: v})}/>
-              </div>
-              <div className="biere-desc">
-                <Editable value={b.desc} onChange={v => updateItem("bieres_pression", i, {...b, desc: v})} multiline/>
-              </div>
-              <div className="biere-prices">
-                <Editable value={b.p25} onChange={v => updateItem("bieres_pression", i, {...b, p25: v})}/>
-                {" | "}
-                <Editable value={b.p50} onChange={v => updateItem("bieres_pression", i, {...b, p50: v})}/>
-                {" | "}
-                <Editable value={b.girafe} onChange={v => updateItem("bieres_pression", i, {...b, girafe: v})}/>
-              </div>
-            </div>
-          ))}
-          <div style={{fontSize:"10px", fontStyle:"italic", marginTop:"6px", color:"#C0392B", fontWeight:700}}>
-            <Editable value={d.biere_mention} onChange={v => update("biere_mention", v)}/>
-          </div>
-        </div>
+        {renderOverlaysBack("boissons_v2")}
+        {(data.sectionOrder.boissons_v2 || []).map(sid => renderBoissonsSection(sid, "boissons_v2"))}
+        {renderOverlaysFront("boissons_v2")}
       </div>
 
       {/* VOLET 3 */}
       <div className={"volet v-white" + (overlayProps.activeVolet === "boissons_v3" ? " active-volet" : "")} onMouseDown={onVoletMouseDown("boissons_v3")}>
-        <div>
-          <div className="col-title">BIÈRES BOUTEILLES</div>
-          {d.bieres_bouteilles.map((it, i) => (
-            <div className="item-compact" key={"bb"+i}>
-              <Editable className="name" value={it.nom} onChange={v => updateItem("bieres_bouteilles", i, {...it, nom: v})}/>
-              <Editable className="price" value={it.prix} onChange={v => updateItem("bieres_bouteilles", i, {...it, prix: v})}/>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div className="col-title">RHUMS ARRANGÉS & SIGNATURE</div>
-          <div style={{fontSize:"10px", textAlign:"center", color:"#C0392B", fontWeight:700, marginBottom:"4px"}}>
-            <Editable value={d.rhums_arranges.prix} onChange={v => update("rhums_arranges", {...d.rhums_arranges, prix: v})}/>
-          </div>
-          <div style={{fontSize:"9px", textAlign:"center", fontStyle:"italic", marginBottom:"6px"}}>
-            <Editable value={d.rhums_arranges.sous_titre} onChange={v => update("rhums_arranges", {...d.rhums_arranges, sous_titre: v})}/>
-          </div>
-          {d.rhums_arranges.items.map((r, i) => (
-            <div key={"rh"+i} style={{fontSize:"11px", textAlign:"center", fontWeight:700, padding:"2px 0", borderBottom:"1px solid #eee"}}>
-              <Editable value={r} onChange={v => {const a=[...d.rhums_arranges.items]; a[i]=v; update("rhums_arranges", {...d.rhums_arranges, items: a});}}/>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div className="col-title">SHOTS</div>
-          <div style={{fontSize:"9px", textAlign:"right", fontWeight:600, marginBottom:"2px"}}>SHOT &nbsp;|&nbsp; LE MÈTRE</div>
-          {d.shots.map((it, i) => (
-            <div className="item-compact" key={"sh"+i}>
-              <Editable className="name" value={it.nom} onChange={v => updateItem("shots", i, {...it, nom: v})}/>
-              <span>
-                <Editable value={it.prix} onChange={v => updateItem("shots", i, {...it, prix: v})}/>
-                {" | "}
-                <Editable value={it.metre} onChange={v => updateItem("shots", i, {...it, metre: v})}/>
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div className="col-title">MIXER</div>
-          {d.mixer.map((it, i) => (
-            <div className="item-compact" key={"mx"+i}>
-              <Editable className="name" value={it.nom} onChange={v => updateItem("mixer", i, {...it, nom: v})}/>
-              <Editable className="price" value={it.prix} onChange={v => updateItem("mixer", i, {...it, prix: v})}/>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div className="col-title">SPRITZ SIGNATURES</div>
-          {d.spritz.map((it, i) => (
-            <div className="item-compact" key={"sp"+i}>
-              <Editable className="name" value={it.nom} onChange={v => updateItem("spritz", i, {...it, nom: v})}/>
-              <Editable className="price" value={it.prix} onChange={v => updateItem("spritz", i, {...it, prix: v})}/>
-            </div>
-          ))}
-        </div>
+        {renderOverlaysBack("boissons_v3")}
+        {(data.sectionOrder.boissons_v3 || []).map(sid => renderBoissonsSection(sid, "boissons_v3"))}
+        {renderOverlaysFront("boissons_v3")}
       </div>
 
       <div className="footer-boissons">
@@ -1563,6 +3042,7 @@ function App() {
   };
 
   const [exportingPNG, setExportingPNG] = React.useState(false);
+  const [showTextScalePanel, setShowTextScalePanel] = React.useState(false); // v6.2
 
   // ============ OVERLAYS : états et handlers ============
   const [activeVolet, setActiveVolet] = React.useState(null);
@@ -1692,6 +3172,28 @@ function App() {
     setOverlays(selectedVoletKey, list.map(o => o.id === selectedId ? { ...o, zIndex: minZ - 1 } : o));
   };
 
+  // === v6.2 : changer le plan (back/front) d'un overlay ===
+  const handleSetLayer = (newLayer) => {
+    if (!selectedVoletKey || !selectedId) return;
+    const list = getOverlays(selectedVoletKey);
+    setOverlays(selectedVoletKey, list.map(o => o.id === selectedId ? { ...o, layer: newLayer } : o));
+  };
+  // === v6.2 : Échelles de textes carte (5 sliders globaux) ===
+  // Stocké dans data.textScales = { titre, sousTitre, nom, desc, prix }
+  // Multiplicateur en pourcentage (70 à 150). Défaut 100.
+  const DEFAULT_TEXT_SCALES = { titre: 100, sousTitre: 100, nom: 100, desc: 100, prix: 100 };
+  const getTextScales = () => ({ ...DEFAULT_TEXT_SCALES, ...(data.textScales || {}) });
+  const handleSetTextScale = (key, value) => {
+    const cur = getTextScales();
+    const newScales = { ...cur, [key]: value };
+    handleChange({ ...data, textScales: newScales });
+  };
+  const handleResetTextScales = () => {
+    handleChange({ ...data, textScales: { ...DEFAULT_TEXT_SCALES } });
+  };
+  const textScales = getTextScales();
+
+
   // Raccourcis clavier overlays
   React.useEffect(() => {
     const onKey = (e) => {
@@ -1721,6 +3223,7 @@ function App() {
     selectOverlay,
     getOverlays,
     setOverlays,
+    onSetLayer: handleSetLayer,
   };
 
   const handleExportPNG = async () => {
@@ -1770,8 +3273,9 @@ function App() {
 
   return (
     <>
+      <EditableToolbarHost previewMode={previewMode}/>
       <div className="toolbar">
-        <h1>🐾 THE BLACK CAT — ÉDITEUR DE CARTE</h1>
+        <h1>🐾 THE BLACK CAT — ÉDITEUR DE CARTE v6.8</h1>
         <button onClick={handlePrint}>🖨 Imprimer / PDF</button>
         <button onClick={handleExportPNG} disabled={exportingPNG} title="Export 3 images PNG haute résolution, une par volet (pour import Canva)">
           {exportingPNG ? "⏳ Export..." : "🖼 Export PNG"}
@@ -1785,6 +3289,9 @@ function App() {
         <input type="file" ref={imageInputRef} accept="image/*" style={{display:"none"}} onChange={handleImageFileChange}/>
         <button onClick={() => setPreviewMode(!previewMode)} className={previewMode ? "active" : ""}>
           {previewMode ? "✎ Édition" : "👁 Aperçu"}
+        </button>
+        <button onClick={() => setShowTextScalePanel(s => !s)} className={showTextScalePanel ? "active" : ""} title="Régler la taille des textes de la carte (titres, items, prix...)">
+          🔠 Échelles
         </button>
         <button onClick={() => undo() ? (setToast("Annulé"), setTimeout(()=>setToast(""),1200)) : (setToast("Rien à annuler"), setTimeout(()=>setToast(""),1200))} disabled={history.length === 0}>
           ↶ Annuler
@@ -1811,6 +3318,49 @@ function App() {
       </div>
 
       <div className="page-wrapper" style={{fontFamily: fontFamily}}>
+        {/* v6.4 : injection conditionnelle. Si tous les sliders sont à 100% (±1%),
+            on n'injecte rien — le CSS d'origine reste intact (pas d'override !important).
+            Sinon, on calcule sur les VRAIES tailles natives du v6_1 (lignes 166-225). */}
+        {(() => {
+          const inDefault = (s) => s >= 99 && s <= 101;
+          const allDefault = inDefault(textScales.titre)
+                          && inDefault(textScales.sousTitre)
+                          && inDefault(textScales.nom)
+                          && inDefault(textScales.desc)
+                          && inDefault(textScales.prix);
+          if (allDefault) return null;
+          // Tailles natives (v6_1 source CSS, lignes 166-225)
+          const NATIVE = {
+            sectionTitle:     18,  // .section-title
+            sectionTitleDark: 16,  // .section-title-dark
+            sectionSubtitle:   8,  // .section-subtitle
+            priceBanner:      16,  // .price-banner
+            item:              9,  // .item (base)
+            itemName:          9,  // .item-name
+            itemPrefix:        9,  // .item-prefix (hérite item)
+            itemDesc:          8,  // .item-desc
+            itemPrice:        10,  // .item-price
+          };
+          const sT  = textScales.titre     / 100;
+          const sST = textScales.sousTitre / 100;
+          const sN  = textScales.nom       / 100;
+          const sD  = textScales.desc      / 100;
+          const sP  = textScales.prix      / 100;
+          const fmt = (n) => Number(n.toFixed(2));
+          return (
+            <style>{`
+              .page-wrapper .section-title      { font-size: ${fmt(NATIVE.sectionTitle * sT)}px !important; }
+              .page-wrapper .section-title-dark { font-size: ${fmt(NATIVE.sectionTitleDark * sT)}px !important; }
+              .page-wrapper .section-subtitle   { font-size: ${fmt(NATIVE.sectionSubtitle * sST)}px !important; }
+              .page-wrapper .price-banner       { font-size: ${fmt(NATIVE.priceBanner * sP)}px !important; }
+              .page-wrapper .item               { font-size: ${fmt(NATIVE.item * sN)}px !important; }
+              .page-wrapper .item-name          { font-size: ${fmt(NATIVE.itemName * sN)}px !important; }
+              .page-wrapper .item-prefix        { font-size: ${fmt(NATIVE.itemPrefix * sN)}px !important; }
+              .page-wrapper .item-desc          { font-size: ${fmt(NATIVE.itemDesc * sD)}px !important; }
+              .page-wrapper .item-price         { font-size: ${fmt(NATIVE.itemPrice * sP)}px !important; }
+            `}</style>
+          );
+        })()}
         {tab === "plats" && <PagePlats data={data} onChange={handleChange} fontFamily={fontFamily} setFontFamily={setFontFamily} overlayProps={overlayProps}/>}
         {tab === "boissons" && <PageBoissons data={data} onChange={handleChange} overlayProps={overlayProps}/>}
       </div>
@@ -1822,8 +3372,47 @@ function App() {
           onDelete={handleDeleteOverlay}
           onBringFront={handleBringFront}
           onSendBack={handleSendBack}
+          onSetLayer={handleSetLayer}
           fontOptions={FONT_OPTIONS}
+          layerPanel={
+            <LayerPanel
+              voletKey={selectedVoletKey}
+              overlays={selectedVoletKey ? getOverlays(selectedVoletKey) : []}
+              selectedId={selectedId}
+              onSelect={(vk, id) => selectOverlay(vk, id)}
+            />
+          }
         />
+      )}
+
+      {showTextScalePanel && !previewMode && (
+        <div className="text-scale-panel">
+          <h4>Tailles des textes carte</h4>
+          {[
+            { key: "titre", label: "Titres sections" },
+            { key: "sousTitre", label: "Sous-titres" },
+            { key: "nom", label: "Noms des plats" },
+            { key: "desc", label: "Descriptions" },
+            { key: "prix", label: "Prix" },
+          ].map(({ key, label }) => (
+            <div className="ts-row" key={key}>
+              <label>{label}</label>
+              <input
+                type="range"
+                min="70"
+                max="150"
+                step="5"
+                value={textScales[key]}
+                onChange={e => handleSetTextScale(key, parseInt(e.target.value))}
+              />
+              <span className="ts-val">{textScales[key]}%</span>
+            </div>
+          ))}
+          <div className="ts-actions">
+            <button onClick={handleResetTextScales} title="Remettre à 100%">↺ Reset</button>
+            <button className="close" onClick={() => setShowTextScalePanel(false)}>Fermer</button>
+          </div>
+        </div>
       )}
 
       {modal && (
