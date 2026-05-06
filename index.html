@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BlackCat - Éditeur de Carte v6.8.1</title>
+<title>BlackCat - Éditeur de Carte v6.8.3.2</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -235,7 +235,9 @@ body { padding: 20px 0 80px; }
   font-size: 9px; line-height: 1.2;
   padding: 1px 0;
 }
-.item-compact .name { flex: 1; min-width: 0; color: #C0392B; font-weight: 700; }
+/* [v6_8_3] Items en noir par défaut. Le rouge est réservé aux titres de section.
+   Les span color explicite (via toolbar) prennent toujours le dessus. */
+.item-compact .name { flex: 1; min-width: 0; color: #000; font-weight: 700; }
 .item-compact .price { font-weight: 700; margin-left: 6px; white-space: nowrap; }
 .col-title {
   font-weight: 900; font-size: 14px;
@@ -296,11 +298,11 @@ body { padding: 20px 0 80px; }
 .shots-table { width: 100%; border-collapse: collapse; font-size: 9px; }
 .shots-table td { padding: 1px 2px; vertical-align: baseline; }
 .shots-table .price { text-align: right; font-weight: 700; white-space: nowrap; width: 50px; }
-.shots-table .shots-name { color: #C0392B; font-weight: 700; text-transform: uppercase; }
+.shots-table .shots-name { color: #000; font-weight: 700; text-transform: uppercase; }
 .biere-row { border-top: 1px solid #ccc; padding-top: 3px; margin-top: 3px; }
-.biere-name { font-weight: 700; font-size: 9.5px; color: #C0392B; }
+.biere-name { font-weight: 700; font-size: 9.5px; color: #000; }
 .biere-desc { font-size: 7.5px; font-style: italic; opacity: .75; line-height: 1.15; margin: 1px 0 2px; }
-.biere-prices { font-size: 8.5px; font-weight: 600; color: #C0392B; }
+.biere-prices { font-size: 8.5px; font-weight: 600; color: #000; }
 /* Grid bières pression — aligne les colonnes prix sous leurs intitulés */
 .biere-grid { width: 100%; font-size: 8.5px; }
 .biere-grid-header,
@@ -515,6 +517,16 @@ body.preview .volet.active-volet { box-shadow: none; }
 body:not(.preview) .overlay-layer-back  { z-index: 1000 !important; }
 body:not(.preview) .overlay-layer-front { z-index: 1001 !important; }
 
+/* [v6_8_3] Mode overlays verrouillés : remet les overlays back derrière le contenu
+   pour permettre l'édition libre des shots, bières, etc., sans clics interceptés.
+   Le front reste devant pour rester visible. Le contour des overlays reste affiché
+   pour qu'on sache qu'ils sont là. */
+body.overlays-locked:not(.preview) .overlay-layer-back  { z-index: 0 !important; }
+body.overlays-locked:not(.preview) .overlay-layer-back .overlay-item {
+  pointer-events: none !important;
+  opacity: 0.5;
+}
+
 body.preview .overlay-item { pointer-events: none; }
 body.preview .overlay-item.selected { outline: none; }
 body.preview .overlay-handle { display: none; }
@@ -559,6 +571,11 @@ body.preview [contenteditable="true"]:hover,
 body.preview [contenteditable="true"]:focus {
   background: transparent; box-shadow: none;
 }
+
+/* [v6_8_3_2] Règle :empty retirée : forcer display: inline-block sur les éléments
+   vides cassait le layout des sections (TAPAS sortait de sa colonne, etc.).
+   Pour ajouter du contenu sur une nouvelle ligne, taper directement sans cliquer
+   ou utiliser une zone de texte en overlay. */
 
 /* ============ v6.5 EDIT-CHROME : Toolbar / Lignes / Sections ============ */
 /* Toolbar de formatage flottante */
@@ -1236,6 +1253,34 @@ function sanitizeNode(node) {
   if (node.nodeType === 3) return node.cloneNode();
   if (node.nodeType !== 1) return null;
   const tag = node.tagName.toUpperCase();
+  // [v6_8_2] Conversion <font color="..."> → <span style="color: ...">
+  // execCommand("foreColor") sans styleWithCSS génère du <font> qui n'est pas
+  // dans ALLOWED_TAGS — au lieu de le stripper bêtement, on convertit pour
+  // préserver les couleurs définies par l'utilisateur (cas legacy + sécurité).
+  if (tag === "FONT") {
+    const color = node.getAttribute("color");
+    const sizeAttr = node.getAttribute("size");
+    const span = document.createElement("span");
+    const styles = [];
+    if (color && /^(#[0-9a-fA-F]{3,8}|rgb\([^)]*\)|rgba\([^)]*\)|[a-zA-Z]+)$/.test(color)) {
+      styles.push(`color: ${color}`);
+    }
+    // size HTML (1-7) → px approximatif (rare mais on couvre)
+    const SIZE_MAP = { "1":"10px","2":"13px","3":"16px","4":"18px","5":"24px","6":"32px","7":"48px" };
+    if (sizeAttr && SIZE_MAP[sizeAttr]) styles.push(`font-size: ${SIZE_MAP[sizeAttr]}`);
+    if (styles.length) span.setAttribute("style", styles.join("; "));
+    Array.from(node.childNodes).forEach(child => {
+      const cleaned = sanitizeNode(child);
+      if (cleaned) span.appendChild(cleaned);
+    });
+    // Si pas de style et pas d'enfants utiles, on unwrap quand même
+    if (!styles.length) {
+      const frag = document.createDocumentFragment();
+      Array.from(span.childNodes).forEach(c => frag.appendChild(c));
+      return frag;
+    }
+    return span;
+  }
   if (!ALLOWED_TAGS.has(tag)) {
     // Tag non autorisé : on garde uniquement les enfants (unwrap)
     const frag = document.createDocumentFragment();
@@ -1318,9 +1363,8 @@ function FormatToolbar({ targetRef, onCommand }) {
   const [activeStates, setActiveStates] = React.useState({ bold: false, italic: false, underline: false });
   const tbRef = React.useRef(null);
 
-  const [textColor, setTextColor] = React.useState("#000000");
+  // [v6_8_3] textColor/colorInputRef supprimés (palette restreinte remplace le picker libre)
   const savedRangeRef = React.useRef(null);
-  const colorInputRef = React.useRef(null);
 
   const saveSelection = () => {
     const sel = window.getSelection();
@@ -1386,52 +1430,39 @@ function FormatToolbar({ targetRef, onCommand }) {
       <button className="b-size" title="Diminuer taille" onClick={() => cmd("fontSizeDelta", -1)}>A−</button>
       <button className="b-size" title="Augmenter taille" onClick={() => cmd("fontSizeDelta", +1)}>A+</button>
       <span className="sep"></span>
-      <span
-        title="Couleur du texte"
-        style={{display:"inline-flex",alignItems:"center",gap:"3px",cursor:"pointer",position:"relative"}}
+      {/* [v6_8_3] Palette restreinte : Noir / Rouge thème / Or thème + bouton reset.
+          Évite la dérive (avant : color picker libre permettait n'importe quelle teinte).
+          Le bouton reset retire tous les <span style="color:..."> de la sélection. */}
+      <button
+        title="Noir (couleur par défaut)"
+        onMouseDown={e => { e.preventDefault(); saveSelection(); }}
+        onClick={() => { restoreSelection(); cmd("foreColor", "#000000"); }}
+        style={{padding:"2px 4px",minWidth:"28px"}}
       >
-        <span style={{fontSize:"11px",color:"#ccc",pointerEvents:"none"}}>A</span>
-        <span
-          style={{
-            display:"inline-block", width:"18px", height:"18px",
-            borderRadius:"3px", border:"1px solid rgba(255,255,255,.4)",
-            background: textColor, cursor:"pointer", flexShrink:0
-          }}
-          onMouseDown={e => {
-            e.preventDefault(); e.stopPropagation();
-            saveSelection();
-            // [v6_8] On reset l'input à une valeur sentinelle différente avant le clic
-            // pour que onInput se déclenche même si l'utilisateur re-choisit la même couleur
-            // (notamment pour repasser au noir #000000 qui est la valeur initiale)
-            if (colorInputRef.current) {
-              // Sentinelle : on passe par une valeur improbable avant l'ouverture
-              colorInputRef.current.value = textColor === "#000000" ? "#010101" : textColor;
-              colorInputRef.current.click();
-            }
-          }}
-        />
-        <input
-          ref={colorInputRef}
-          type="color"
-          defaultValue="#000000"
-          onMouseDown={e => e.stopPropagation()}
-          onInput={e => {
-            const newColor = e.target.value;
-            setTextColor(newColor);
-            restoreSelection();
-            cmd("foreColor", newColor);
-          }}
-          onChange={e => {
-            // Fallback si onInput pas déclenché (vieux Safari)
-            const newColor = e.target.value;
-            setTextColor(newColor);
-            restoreSelection();
-            cmd("foreColor", newColor);
-          }}
-          style={{position:"absolute",width:"1px",height:"1px",opacity:0,pointerEvents:"none"}}
-          title="Couleur du texte"
-        />
-      </span>
+        <span style={{display:"inline-block",width:"14px",height:"14px",background:"#000000",borderRadius:"2px",border:"1px solid #fff",verticalAlign:"middle"}}></span>
+      </button>
+      <button
+        title="Rouge thème (#C0392B) — pour les accents"
+        onMouseDown={e => { e.preventDefault(); saveSelection(); }}
+        onClick={() => { restoreSelection(); cmd("foreColor", "#C0392B"); }}
+        style={{padding:"2px 4px",minWidth:"28px"}}
+      >
+        <span style={{display:"inline-block",width:"14px",height:"14px",background:"#C0392B",borderRadius:"2px",border:"1px solid #fff",verticalAlign:"middle"}}></span>
+      </button>
+      <button
+        title="Or thème (#D4A843)"
+        onMouseDown={e => { e.preventDefault(); saveSelection(); }}
+        onClick={() => { restoreSelection(); cmd("foreColor", "#D4A843"); }}
+        style={{padding:"2px 4px",minWidth:"28px"}}
+      >
+        <span style={{display:"inline-block",width:"14px",height:"14px",background:"#D4A843",borderRadius:"2px",border:"1px solid #fff",verticalAlign:"middle"}}></span>
+      </button>
+      <button
+        title="Réinitialiser couleur (revient à la couleur par défaut)"
+        onMouseDown={e => { e.preventDefault(); saveSelection(); }}
+        onClick={() => { restoreSelection(); cmd("removeColor"); }}
+        style={{padding:"2px 6px"}}
+      >⌫A</button>
     </div>
   );
 }
@@ -1540,8 +1571,51 @@ function EditableToolbarHost({ previewMode }) {
   const handleCmd = (name, value) => {
     if (name === "foreColor") {
       try {
+        // [v6_8_2] Force Chrome/Firefox à générer <span style="color: ..."> au lieu
+        // de <font color="..."> (qui serait strippé par le sanitizer car FONT n'est
+        // pas dans ALLOWED_TAGS). Sans ça, les changements de couleur disparaissaient
+        // silencieusement à la sauvegarde.
+        document.execCommand("styleWithCSS", false, true);
         document.execCommand("foreColor", false, value);
       } catch(e) {}
+      return;
+    }
+    if (name === "removeColor") {
+      // [v6_8_3] Retire toute couleur explicite sur la sélection.
+      // execCommand("removeFormat") enlève TOUT le formatage (gras, italique, etc.)
+      // donc on fait à la main : on parcourt les span ancestraux ET descendants
+      // dans la sélection et on retire la propriété color de leur style inline.
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return;
+      // On utilise document.execCommand("foreColor", "inherit") qui dans la pratique
+      // génère un span avec color: inherit — et pour que ça soit propre on fait aussi
+      // un nettoyage manuel des span color: existants dans la zone éditable parente.
+      try {
+        document.execCommand("styleWithCSS", false, true);
+        document.execCommand("foreColor", false, "inherit");
+      } catch(e) {}
+      // Nettoyage des span avec color dans l'éditable courant
+      const editable = (range.startContainer.nodeType === 3 ? range.startContainer.parentElement : range.startContainer).closest('[contenteditable="true"]');
+      if (editable) {
+        editable.querySelectorAll('span[style*="color"]').forEach(span => {
+          // Si le span n'a QUE color comme style, on l'unwrap
+          const style = span.getAttribute("style") || "";
+          const cleaned = style.split(";").filter(d => {
+            const p = d.split(":")[0]?.trim().toLowerCase();
+            return p && p !== "color";
+          }).join(";").trim();
+          if (cleaned) {
+            span.setAttribute("style", cleaned);
+          } else {
+            // Plus rien dans le style → on déplie le span
+            const parent = span.parentNode;
+            while (span.firstChild) parent.insertBefore(span.firstChild, span);
+            parent.removeChild(span);
+          }
+        });
+      }
       return;
     }
     if (name === "fontSizeDelta") {
@@ -2954,6 +3028,10 @@ function App() {
   const { data, save, undo, reset, history, saveStatus } = useCarteData();
   const [tab, setTab] = React.useState("plats");
   const [previewMode, setPreviewMode] = React.useState(false);
+  // [v6_8_3] Mode "Verrouiller overlays" : ramène les overlays back-layer (chats, etc.)
+  // derrière le contenu pour pouvoir éditer librement sans clics interceptés.
+  // À désactiver pour repositionner/sélectionner un overlay.
+  const [overlaysLocked, setOverlaysLocked] = React.useState(true);
   const [fbEnabled, setFbEnabled] = React.useState(() => localStorage.getItem("bc_fb_enabled") === "1");
   const fontFamily = data.fontFamily || "Arial, sans-serif";
   const setFontFamily = (f) => handleChange({ ...data, fontFamily: f });
@@ -3024,6 +3102,12 @@ function App() {
     document.body.classList.toggle("preview", previewMode);
   }, [previewMode]);
 
+  // [v6_8_3] Toggle overlays-locked : applique sur body pour que le CSS
+  // remette les overlays back en z-index 0 (derrière le contenu).
+  React.useEffect(() => {
+    document.body.classList.toggle("overlays-locked", overlaysLocked);
+  }, [overlaysLocked]);
+
   const handleExport = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
     const url = URL.createObjectURL(blob);
@@ -3045,7 +3129,17 @@ function App() {
       try {
         const parsed = JSON.parse(ev.target.result);
         if (parsed.plats && parsed.boissons) {
-          save(migrateData(parsed));
+          // [v6_8_2] On migre, puis on bumpe meta.derniere_maj à MAINTENANT
+          // pour que la sync Firebase considère cet import comme la version
+          // la plus récente. Sinon, le listener Firebase recevait une version
+          // remote plus récente que l'import et écrasait l'import en silence
+          // → l'utilisateur avait l'impression que "ça fait rien".
+          const migrated = migrateData(parsed);
+          if (!migrated.meta) migrated.meta = {};
+          migrated.meta.derniere_maj = new Date().toISOString();
+          // [v6_8_2] On passe par handleChange (au lieu de save direct) pour
+          // pousser AUSSI sur Firebase si la sync est active.
+          handleChange(migrated);
           setToast("Carte importée");
           setTimeout(() => setToast(""), 2000);
         } else {
@@ -3134,9 +3228,29 @@ function App() {
   const handlePrint = () => {
     window.print();
   };
+  // [v6_8_3] Imprime les deux pages (plats + boissons) en une seule fois.
+  // Active printAllMode → le rendu DOM affiche les deux → useEffect déclenche window.print().
+  const handlePrintAll = () => {
+    setPrintAllMode(true);
+  };
 
   const [exportingPNG, setExportingPNG] = React.useState(false);
   const [showTextScalePanel, setShowTextScalePanel] = React.useState(false); // v6.2
+  // [v6_8_3] Mode impression "tout d'un coup" : rendu temporaire des deux pages
+  // (plats + boissons) dans le DOM, puis appel de window.print(). Le useEffect
+  // qui suit le state s'occupe du timing pour laisser React rendre avant le print.
+  const [printAllMode, setPrintAllMode] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!printAllMode) return;
+    // Attendre que le DOM soit à jour (deux frames pour être tranquille)
+    const t = setTimeout(() => {
+      window.print();
+      // Après le retour du dialog d'impression, on revient à l'état normal
+      setPrintAllMode(false);
+    }, 100);
+    return () => clearTimeout(t);
+  }, [printAllMode]);
 
   // ============ OVERLAYS : états et handlers ============
   const [activeVolet, setActiveVolet] = React.useState(null);
@@ -3369,8 +3483,9 @@ function App() {
     <>
       <EditableToolbarHost previewMode={previewMode}/>
       <div className="toolbar">
-        <h1>🐾 THE BLACK CAT — ÉDITEUR DE CARTE v6.8.1</h1>
-        <button onClick={handlePrint}>🖨 Imprimer / PDF</button>
+        <h1>🐾 THE BLACK CAT — ÉDITEUR DE CARTE v6.8.3.2</h1>
+        <button onClick={handlePrint} title="Imprimer / PDF de la page actuellement affichée (plats OU boissons)">🖨 Imprimer / PDF</button>
+        <button onClick={handlePrintAll} title="Imprimer / PDF des deux pages (plats + boissons) d'un coup">🖨 Tout</button>
         <button onClick={handleExportPNG} disabled={exportingPNG} title="Export 3 images PNG haute résolution, une par volet (pour import Canva)">
           {exportingPNG ? "⏳ Export..." : "🖼 Export PNG"}
         </button>
@@ -3383,6 +3498,13 @@ function App() {
         <input type="file" ref={imageInputRef} accept="image/*" style={{display:"none"}} onChange={handleImageFileChange}/>
         <button onClick={() => setPreviewMode(!previewMode)} className={previewMode ? "active" : ""}>
           {previewMode ? "✎ Édition" : "👁 Aperçu"}
+        </button>
+        <button
+          onClick={() => setOverlaysLocked(l => !l)}
+          className={overlaysLocked ? "active" : ""}
+          title={overlaysLocked ? "Overlays (chats, images) verrouillés derrière le contenu — clique pour les libérer et les déplacer" : "Overlays libres et déplaçables — clique pour les verrouiller derrière et éditer le contenu"}
+        >
+          {overlaysLocked ? "🔒 Overlays" : "🔓 Overlays"}
         </button>
         <button onClick={() => setShowTextScalePanel(s => !s)} className={showTextScalePanel ? "active" : ""} title="Régler la taille des textes de la carte (titres, items, prix...)">
           🔠 Échelles
@@ -3456,8 +3578,8 @@ function App() {
             `}</style>
           );
         })()}
-        {tab === "plats" && <PagePlats data={data} onChange={handleChange} fontFamily={fontFamily} setFontFamily={setFontFamily} overlayProps={overlayProps}/>}
-        {tab === "boissons" && <PageBoissons data={data} onChange={handleChange} overlayProps={overlayProps}/>}
+        {(printAllMode || tab === "plats") && <PagePlats data={data} onChange={handleChange} fontFamily={fontFamily} setFontFamily={setFontFamily} overlayProps={overlayProps}/>}
+        {(printAllMode || tab === "boissons") && <PageBoissons data={data} onChange={handleChange} overlayProps={overlayProps}/>}
       </div>
 
       {selectedOverlay && !previewMode && (
